@@ -19,5 +19,5 @@ function validateLanguage(language) {
 }
 
 exports.languageSchema = languageSchema;
-exports.Category = Category;
+exports.Language = Language;
 exports.validate = validateLanguage;

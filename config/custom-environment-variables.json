@@ -1,0 +1,4 @@
+{
+  "jwtPrivateKey": "songLibrary_privateKey",
+  "db": "MONGODB_URI"
+}
