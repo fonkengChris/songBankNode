@@ -1,37 +1,5 @@
-// const winston = require("winston");
-// require("winston-mongodb");
-// require("express-async-errors");
-
-// // process.on("uncaughtException", (ex) => {
-// //   winston.error(ex.message, ex);
-// //   process.exit(1);
-// // });
-
-// module.exports = function () {
-//   winston.exceptions.handle(
-//     new winston.transports.File({ filename: "logfile.log" })
-//   );
-
-//   process.on("unhandledRejection", (ex) => {
-//     // winston.error(ex.message, ex);
-//     // process.exit(1);
-//     throw ex;
-//   });
-
-//   winston.add(new winston.transports.Console());
-
-//   winston.add(new winston.transports.File({ filename: "logfile.log" }));
-
-//   winston.add(
-//     new winston.transports.MongoDB({
-//       db: "mongodb://localhost/vidly",
-//       level: "error",
-//     })
-//   );
-// };
-
 const winston = require("winston");
-// require("winston-mongodb");
+require("winston-mongodb");
 require("express-async-errors");
 
 module.exports = function () {
@@ -85,10 +53,10 @@ module.exports = function () {
   );
 
   // Add a transport for logging errors to MongoDB
-  // winston.add(
-  //   new winston.transports.MongoDB({
-  //     db: "mongodb://localhost/vidly",
-  //     level: "error",
-  //   })
-  // );
+  winston.add(
+    new winston.transports.MongoDB({
+      db: "mongodb://localhost/songLibrary",
+      level: "error",
+    })
+  );
 };

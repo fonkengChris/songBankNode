@@ -1,7 +1,7 @@
 // models/DocumentSongFile.js
 const mongoose = require("mongoose");
 const Joi = require("joi");
-const preview_image = require("./preview_image");
+
 
 const documentSongFileSchema = new mongoose.Schema({
   song: { type: mongoose.Schema.Types.ObjectId, ref: "Song", required: true },
@@ -34,5 +34,5 @@ function validateDocumentSongFile(file) {
 }
 
 exports.documentSongFileSchema = documentSongFileSchema;
-exports.DocumentSongFile = DocumentSongFile;
+exports.DocumentFile = DocumentSongFile;
 exports.validate = validateDocumentSongFile;

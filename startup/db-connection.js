@@ -3,8 +3,8 @@ const winston = require("winston");
 require("dotenv").config();
 
 module.exports = function () {
-  // const db = process.env.MONGODB_URI;
-  const db = process.env.MONGODB_URI || "mongodb://localhost/songLibrary";
+  const db = process.env.MONGODB_URI;
+  // const db = process.env.MONGODB_URI || "mongodb://localhost/songLibrary";
 
   mongoose
     .connect(db)
