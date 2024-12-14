@@ -2,6 +2,7 @@ const auth = require("../middleware/auth");
 const { Customer, validate } = require("../modules/customer");
 const mongoose = require("mongoose");
 const express = require("express");
+const admin = require("../middleware/admin");
 const router = express.Router();
 
 router.get("/", async (req, res) => {
@@ -9,7 +10,7 @@ router.get("/", async (req, res) => {
   res.send(customers);
 });
 
-router.post("/", auth, async (req, res) => {
+router.post("/", [auth, admin], async (req, res) => {
   const { error } = validate(req.body);
   if (error) return res.status(400).send(error.message);
 
@@ -27,7 +28,7 @@ router.post("/", auth, async (req, res) => {
   }
 });
 
-router.put("/:id", auth, async (req, res) => {
+router.put("/:id", [auth, admin], async (req, res) => {
   const { error } = validate(req.body);
   if (error) return res.status(400).send(error.message);
   const customer = await Customer.findByIdAndUpdate(
@@ -45,7 +46,7 @@ router.put("/:id", auth, async (req, res) => {
   res.send(customer);
 });
 
-router.delete("/:id", auth, async (req, res) => {
+router.delete("/:id", [auth, admin], async (req, res) => {
   const customer = await Customer.findByIdAndDelete(req.params.id);
   if (!customer) return res.status(404).send("customer not found");
 

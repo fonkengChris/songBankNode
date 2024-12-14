@@ -11,7 +11,7 @@ router.get("/", async (req, res) => {
   res.send(languages);
 });
 
-router.post("/", auth, async (req, res) => {
+router.post("/", [auth, admin], async (req, res) => {
   const { error } = validate(req.body);
   if (error) return res.status(400).send(error.message);
 
@@ -20,7 +20,7 @@ router.post("/", auth, async (req, res) => {
   res.send(language);
 });
 
-router.put("/:id", [auth, validateObjectId], async (req, res) => {
+router.put("/:id", [auth, admin, validateObjectId], async (req, res) => {
   const { error } = validate(req.body);
   if (error) return res.status(400).send(error.message);
   const language = await Language.findByIdAndUpdate(

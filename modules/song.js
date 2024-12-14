@@ -10,7 +10,7 @@ const songSchema = new mongoose.Schema({
   lastUpdate: { type: Date, default: Date.now },
   likesCount: { type: Number, default: 0 },
   lyrics: { type: String },
-  metacritic: { type: Number },
+  metacritic: { type: Number, default: 0 },
   views: { type: Number, default: 0 },
   language: {
     type: mongoose.Schema.Types.ObjectId,
@@ -23,11 +23,16 @@ const songSchema = new mongoose.Schema({
     required: true,
   },
 
-  document_files: [
+  documentFiles: [
     { type: mongoose.Schema.Types.ObjectId, ref: "DocumentSongFile" },
   ],
-  audio_file: { type: mongoose.Schema.Types.ObjectId, ref: "AudioSongFile" },
+  audioFile: { type: mongoose.Schema.Types.ObjectId, ref: "AudioSongFile" },
 });
+
+songSchema.methods.updateMetacritic = function () {
+  //calculate and save the Popularity score
+  this.metacritic = this.likesCount * (1 + this.likesCount / this.views) * 100;
+};
 
 const Song = mongoose.model("Song", songSchema);
 
@@ -44,8 +49,8 @@ function validateSong(song) {
     views: Joi.number(),
     languageId: Joi.objectId().required(),
     categoryId: Joi.objectId().required(),
-    audioFileId: Joi.objectId().required(),
-    documentFiles: Joi.array().items(Joi.objectId()).min(1).required(),
+    audioFileId: Joi.objectId(),
+    documentFiles: Joi.array().items(Joi.objectId()).min(1),
   });
 
   return schema.validate(song);

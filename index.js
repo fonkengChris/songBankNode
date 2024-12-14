@@ -1,10 +1,7 @@
 const winston = require("winston");
 const express = require("express");
-const dotenv = require("dotenv");
-const app = express();
 
-// Load environment variables
-dotenv.config();
+const app = express();
 
 require("./startup/logging")();
 require("./startup/routes")(app);
@@ -20,5 +17,3 @@ const server = app.listen(port, () => {
 });
 
 module.exports = server;
-
-
