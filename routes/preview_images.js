@@ -1,50 +1,51 @@
 const auth = require("../middleware/auth");
 const admin = require("../middleware/admin");
-const { AudioFile, validate } = require("../modules/audio_song_file");
+const { PreviewImage, validate } = require("../modules/preview_image");
 const mongoose = require("mongoose");
 const express = require("express");
 const validateObjectId = require("../middleware/validateObjectId");
+const preview_image = require("../modules/preview_image");
 const router = express.Router();
 const path = require("path");
 
 router.get("/", async (req, res) => {
-  const audio_files = await AudioFile.find().sort("_id");
-  res.send(audio_files);
+  const preview_images = await PreviewImage.find().sort("_id");
+  res.send(preview_images);
 });
 
 router.post("/", [auth, admin], async (req, res) => {
   const { error } = validate(req.body);
   if (error) return res.status(400).send(error.message);
 
-  let audio_file = new AudioFile({
-    song: req.body.song,
-    audioFile: req.body.audioFile,
+  let preview_image = new PreviewImage({
+    documentFile: req.body.documentFile,
+    previewImage: req.body.previewImage,
   });
-  audio_file = await audio_file.save();
-  res.send(audio_file);
+  preview_image = await preview_image.save();
+  res.send(preview_image);
 });
 
 router.put("/:id", [auth, admin, validateObjectId], async (req, res) => {
   const { error } = validate(req.body);
   if (error) return res.status(400).send(error.message);
-  const audio_file = await AudioFile.findByIdAndUpdate(req.params.id, {
-    song: req.body.song,
-    audioFile: req.body.audioFile,
+  const preview_image = await PreviewImage.findByIdAndUpdate(req.params.id, {
+    documentFile: req.body.documentFile,
+    previewImage: req.body.previewImage,
   });
 
-  if (!audio_file) return res.status(404).send("audio_file not found");
+  if (!preview_image) return res.status(404).send("preview_image not found");
 
-  res.send(audio_file);
+  res.send(preview_image);
 });
 
 router.delete("/:id", [auth, admin, validateObjectId], async (req, res) => {
-  const audio_file = await AudioFile.findByIdAndDelete(req.params.id);
-  if (!audio_file) return res.status(404).send("audio_file not found");
+  const preview_image = await PreviewImage.findByIdAndDelete(req.params.id);
+  if (!preview_image) return res.status(404).send("preview_image not found");
 
-  res.send(audio_file);
+  res.send(preview_image);
 });
 
-router.get("/:type/:filename", async (req, res) => {
+router.get("/:type/:filename", validateObjectId, async (req, res) => {
   const { type, filename } = req.params;
   const filePath = path.join(__dirname, "../media", type, filename);
 

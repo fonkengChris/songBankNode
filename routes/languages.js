@@ -15,7 +15,7 @@ router.post("/", [auth, admin], async (req, res) => {
   const { error } = validate(req.body);
   if (error) return res.status(400).send(error.message);
 
-  let language = new Language({ name: req.body.name });
+  let language = new Language({ name: req.body.name, code: req.body.code });
   language = await language.save();
   res.send(language);
 });

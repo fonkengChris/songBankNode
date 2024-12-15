@@ -11,7 +11,7 @@ const AudioSongFile = mongoose.model("AudioSongFile", audioSongFileSchema);
 
 function validateAudioSongFile(file) {
   const schema = Joi.object({
-    songId: Joi.objectId().required(),
+    song: Joi.objectId().required(),
     audioFile: Joi.string().required(),
   });
 

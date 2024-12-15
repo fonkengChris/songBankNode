@@ -6,6 +6,7 @@ const express = require("express");
 const validateObjectId = require("../middleware/validateObjectId");
 const preview_image = require("../modules/preview_image");
 const router = express.Router();
+const path = require("path");
 
 router.get("/", async (req, res) => {
   const document_files = await DocumentFile.find().sort("_id");
@@ -48,10 +49,20 @@ router.delete("/:id", [auth, admin, validateObjectId], async (req, res) => {
   res.send(document_file);
 });
 
-router.get("/:id", validateObjectId, async (req, res) => {
-  const document_file = await DocumentFile.findById(req.params.id);
-  if (!document_file) return res.status(404).send("document_file not found");
-  res.send(document_file);
+router.get("/:type/:filename", validateObjectId, async (req, res) => {
+  const { type, filename } = req.params;
+  const filePath = path.join(__dirname, "../media", type, filename);
+
+  res.sendFile(filePath, (err) => {
+    if (err) {
+      console.error(err);
+      res.status(err.status || 500).send("File not found or cannot be served.");
+    }
+  });
 });
 
 module.exports = router;
+
+// const document_file = await DocumentFile.findById(req.params.id);
+// if (!document_file) return res.status(404).send("document_file not found");
+// res.send(document_file);
