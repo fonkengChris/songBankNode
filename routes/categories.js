@@ -15,7 +15,7 @@ router.post("/", [auth, admin], async (req, res) => {
   const { error } = validate(req.body);
   if (error) return res.status(400).send(error.message);
 
-  let category = new Category({ name: req.body.name });
+  let category = new Category({ title: req.body.title });
   category = await category.save();
   res.send(category);
 });
@@ -25,7 +25,7 @@ router.put("/:id", [auth, admin, validateObjectId], async (req, res) => {
   if (error) return res.status(400).send(error.message);
   const category = await Category.findByIdAndUpdate(
     req.params.id,
-    { name: req.body.name },
+    { title: req.body.title },
     { new: true }
   );
 

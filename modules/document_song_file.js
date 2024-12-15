@@ -2,7 +2,6 @@
 const mongoose = require("mongoose");
 const Joi = require("joi");
 
-
 const documentSongFileSchema = new mongoose.Schema({
   song: { type: mongoose.Schema.Types.ObjectId, ref: "Song", required: true },
   notation: {
@@ -24,8 +23,8 @@ const DocumentSongFile = mongoose.model(
 
 function validateDocumentSongFile(file) {
   const schema = Joi.object({
-    songId: Joi.objectId().required(),
-    notationId: Joi.objectId().required(),
+    song: Joi.objectId().required(),
+    notation: Joi.objectId().required(),
     documentFile: Joi.string().required(),
     previewImage: Joi.string().required(),
   });

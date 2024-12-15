@@ -36,7 +36,7 @@ songSchema.methods.updateMetacritic = function () {
 
 const Song = mongoose.model("Song", songSchema);
 
-function validateSong(song) {
+function validateSongPost(song) {
   const schema = Joi.object({
     title: Joi.string().max(255).required(),
     slug: Joi.string().max(255).required(),
@@ -47,9 +47,29 @@ function validateSong(song) {
     lyrics: Joi.string(),
     metacritic: Joi.number(),
     views: Joi.number(),
-    languageId: Joi.objectId().required(),
-    categoryId: Joi.objectId().required(),
+    language: Joi.objectId().required(),
+    category: Joi.objectId().required(),
     audioFileId: Joi.objectId(),
+    documentFiles: Joi.array().items(Joi.objectId()).min(1),
+  });
+
+  return schema.validate(song);
+}
+
+function validateSongPut(song) {
+  const schema = Joi.object({
+    title: Joi.string().max(255),
+    slug: Joi.string().max(255),
+    authorName: Joi.string().max(255),
+    description: Joi.string(),
+    lastUpdate: Joi.date(),
+    likesCount: Joi.number(),
+    lyrics: Joi.string(),
+    metacritic: Joi.number(),
+    views: Joi.number(),
+    language: Joi.objectId(),
+    category: Joi.objectId(),
+    audioFile: Joi.objectId(),
     documentFiles: Joi.array().items(Joi.objectId()).min(1),
   });
 
@@ -58,4 +78,5 @@ function validateSong(song) {
 
 exports.songSchema = songSchema;
 exports.Song = Song;
-exports.validate = validateSong;
+exports.validatePost = validateSongPost;
+exports.validatePut = validateSongPut;

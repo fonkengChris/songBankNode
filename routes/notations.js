@@ -15,7 +15,7 @@ router.post("/", [auth, admin], async (req, res) => {
   const { error } = validate(req.body);
   if (error) return res.status(400).send(error.message);
 
-  let notation = new Notation({ name: req.body.name });
+  let notation = new Notation({ title: req.body.title, slug: req.body.slug });
   notation = await notation.save();
   res.send(notation);
 });
@@ -25,7 +25,7 @@ router.put("/:id", [auth, admin, validateObjectId], async (req, res) => {
   if (error) return res.status(400).send(error.message);
   const notation = await Notation.findByIdAndUpdate(
     req.params.id,
-    { name: req.body.name },
+    { title: req.body.title, slug: req.body.slug },
     { new: true }
   );
 

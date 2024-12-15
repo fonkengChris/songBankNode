@@ -1,6 +1,6 @@
 const auth = require("../middleware/auth");
 const admin = require("../middleware/admin");
-const { Song, validate } = require("../modules/song");
+const { Song, validatePost, validatePut } = require("../modules/song");
 const mongoose = require("mongoose");
 const express = require("express");
 const validateObjectId = require("../middleware/validateObjectId");
@@ -12,7 +12,7 @@ router.get("/", async (req, res) => {
 });
 
 router.post("/", [auth, admin], async (req, res) => {
-  const { error } = validate(req.body);
+  const { error } = validatePost(req.body);
   if (error) return res.status(400).send(error.message);
 
   let song = new Song({
@@ -32,7 +32,7 @@ router.post("/", [auth, admin], async (req, res) => {
 });
 
 router.put("/:id", [auth, admin, validateObjectId], async (req, res) => {
-  const { error } = validate(req.body);
+  const { error } = validatePut(req.body);
   if (error) return res.status(400).send(error.message);
   const song = await Song.findByIdAndUpdate(
     req.params.id,
