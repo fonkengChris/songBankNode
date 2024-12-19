@@ -10,15 +10,16 @@ router.get("/", async (req, res) => {
   res.send(customers);
 });
 
-router.post("/", [auth, admin], async (req, res) => {
+router.post("/", async (req, res) => {
   const { error } = validate(req.body);
   if (error) return res.status(400).send(error.message);
 
   try {
     const customer = new Customer({
-      isGold: req.body.isGold,
-      name: req.body.name,
+      user: req.body.user,
       phone: req.body.phone,
+      country: req.body.country,
+      birth_date: req.body.birth_date,
     });
     await customer.save();
     res.send(customer);

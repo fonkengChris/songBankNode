@@ -19,7 +19,7 @@ module.exports = function (app) {
   app.use("/api/songs", songs);
   app.use("/api/documents", document_files);
   app.use("/api/audios", audio_files);
-  app.use("/api/images", audio_files);
+  app.use("/api/images", image_files);
   app.use("/api/languages", languages);
   app.use("/api/notations", notations);
   app.use("/api/categories", categories);
