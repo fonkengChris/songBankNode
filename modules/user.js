@@ -4,9 +4,15 @@ const passwordComplexity = require("joi-password-complexity");
 const mongoose = require("mongoose");
 const dotenv = require("dotenv");
 
-dotenv.config();
+// Environment variables for secret keys and token expirations
+const ACCESS_TOKEN_SECRET =
+  process.env.ACCESS_TOKEN_SECRET || "your-access-token-secret";
+const REFRESH_TOKEN_SECRET =
+  process.env.REFRESH_TOKEN_SECRET || "your-refresh-token-secret";
+const ACCESS_TOKEN_EXPIRY = "15m"; // Access token expires in 15 minutes
+const REFRESH_TOKEN_EXPIRY = "7d"; // Refresh token expires in 7 days
 
-const jwtPrivateKey = process.env.jwtPrivateKey;
+dotenv.config();
 
 const complexityOptions = {
   min: 8,
@@ -45,7 +51,8 @@ const userSchema = new mongoose.Schema({
   },
 });
 
-userSchema.methods.generateAuthToken = function () {
+//Generate access token
+userSchema.methods.generateAccessToken = function () {
   const token = jwt.sign(
     {
       _id: this._id,
@@ -53,7 +60,27 @@ userSchema.methods.generateAuthToken = function () {
       email: this.email,
       isAdmin: this.isAdmin,
     },
-    jwtPrivateKey
+    ACCESS_TOKEN_SECRET,
+    {
+      expiresIn: ACCESS_TOKEN_EXPIRY,
+    }
+  );
+  return token;
+};
+
+//Generate refresh token
+userSchema.methods.generateRefreshToken = function () {
+  const token = jwt.sign(
+    {
+      _id: this._id,
+      name: this.name,
+      email: this.email,
+      isAdmin: this.isAdmin,
+    },
+    REFRESH_TOKEN_SECRET,
+    {
+      expiresIn: REFRESH_TOKEN_EXPIRY,
+    }
   );
   return token;
 };

@@ -27,7 +27,28 @@ const songSchema = new mongoose.Schema({
     { type: mongoose.Schema.Types.ObjectId, ref: "DocumentSongFile" },
   ],
   audioFile: { type: mongoose.Schema.Types.ObjectId, ref: "AudioSongFile" },
+  languageOverride: String,
 });
+
+// Create a text index on multiple fields
+// songSchema.index(
+//   {
+//     title: "text",
+//     authorName: "text",
+//     description: "text",
+//     lyrics: "text",
+//   },
+//   {
+//     weights: {
+//       title: 5,
+//       authorName: 3,
+//       lyrics: 3,
+//       description: 2,
+//     },
+//   }
+// );
+
+//Created the indexes directly on the database.
 
 songSchema.methods.updateMetacritic = function () {
   //calculate and save the Popularity score
@@ -51,6 +72,7 @@ function validateSongPost(song) {
     category: Joi.objectId().required(),
     audioFileId: Joi.objectId(),
     documentFiles: Joi.array().items(Joi.objectId()).min(1),
+    languageOverride: Joi.string(),
   });
 
   return schema.validate(song);
