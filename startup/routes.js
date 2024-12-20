@@ -1,6 +1,7 @@
 const express = require("express");
 const users = require("../routes/users");
 const auth = require("../routes/auth");
+const change_password = require("../routes/change_password");
 const songs = require("../routes/songs");
 const document_files = require("../routes/document_files");
 const audio_files = require("../routes/audio_files");
@@ -16,6 +17,7 @@ module.exports = function (app) {
   app.use(express.json());
   app.use("/api/users", users);
   app.use("/api/auth", auth);
+  app.use("/api/change_password", change_password);
   app.use("/api/songs", songs);
   app.use("/api/documents", document_files);
   app.use("/api/audios", audio_files);

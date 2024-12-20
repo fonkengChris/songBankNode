@@ -1,5 +1,5 @@
 const auth = require("../middleware/auth");
-const { Customer, validate } = require("../modules/customer");
+const { Customer, validatePost, validatePut } = require("../modules/customer");
 const mongoose = require("mongoose");
 const express = require("express");
 const admin = require("../middleware/admin");
@@ -11,7 +11,7 @@ router.get("/", async (req, res) => {
 });
 
 router.post("/", async (req, res) => {
-  const { error } = validate(req.body);
+  const { error } = validatePost(req.body);
   if (error) return res.status(400).send(error.message);
 
   try {
@@ -29,15 +29,15 @@ router.post("/", async (req, res) => {
   }
 });
 
-router.put("/:id", [auth, admin], async (req, res) => {
-  const { error } = validate(req.body);
+router.put("/:id", auth, async (req, res) => {
+  const { error } = validatePut(req.body);
   if (error) return res.status(400).send(error.message);
   const customer = await Customer.findByIdAndUpdate(
     req.params.id,
     {
-      isGold: req.body.isGold,
-      name: req.body.name,
       phone: req.body.phone,
+      country: req.body.country,
+      birth_date: req.body.birth_date,
     },
     { new: true }
   );

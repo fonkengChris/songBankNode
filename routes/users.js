@@ -26,7 +26,16 @@ router.post("/", async (req, res) => {
   user.password = await bcrypt.hash(user.password, salt);
   await user.save();
 
-  const token = user.generateAuthToken();
+  const token = user.generateAccessToken();
+  const ref = user.generateRefreshToken();
+
+  // Set the refresh token as an HTTP-only cookie
+  res.cookie("refresh-token", ref, {
+    httpOnly: true, // Prevents JavaScript access to the cookie
+    secure: process.env.NODE_ENV === "production", // Use secure cookies in production
+    sameSite: "strict", // Protects against CSRF attacks
+    maxAge: 7 * 24 * 60 * 60 * 1000, // Cookie expiration set to 7 days
+  });
 
   res
     .header("x-auth-token", token)

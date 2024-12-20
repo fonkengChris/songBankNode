@@ -3,7 +3,7 @@ const dotenv = require("dotenv");
 
 dotenv.config();
 
-const jwtPrivateKey = process.env.jwtPrivateKey;
+const jwtPrivateKey = process.env.ACCESS_TOKEN_SECRET;
 
 function auth(req, res, next) {
   const token = req.header("x-auth-token");
