@@ -11,7 +11,7 @@ const customerSchema = new mongoose.Schema({
 
 const Customer = mongoose.model("Customer", customerSchema);
 
-function validateCustomer(customer) {
+function validateCustomerPost(customer) {
   const schema = Joi.object({
     birth_date: Joi.date(),
     phone_number: Joi.string(),
@@ -22,6 +22,18 @@ function validateCustomer(customer) {
   return schema.validate(customer);
 }
 
+function validateCustomerPut(customer) {
+  const schema = Joi.object({
+    birth_date: Joi.date(),
+    phone_number: Joi.string(),
+    country: Joi.string(),
+    user: Joi.objectId(),
+  });
+
+  return schema.validate(customer);
+}
+
 exports.customerSchema = customerSchema;
 exports.Customer = Customer;
-exports.validate = validateCustomer;
+exports.validatePost = validateCustomerPost;
+exports.validatePut = validateCustomerPut;
