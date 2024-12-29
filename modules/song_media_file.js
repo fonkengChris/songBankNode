@@ -1,8 +1,8 @@
-// models/DocumentSongFile.js
+// models/SongMediaFile.js
 const mongoose = require("mongoose");
 const Joi = require("joi");
 
-const documentSongFileSchema = new mongoose.Schema({
+const songMediaFilesSchema = new mongoose.Schema({
   song: { type: mongoose.Schema.Types.ObjectId, ref: "Song", required: true },
   notation: {
     type: mongoose.Schema.Types.ObjectId,
@@ -10,28 +10,24 @@ const documentSongFileSchema = new mongoose.Schema({
     default: null,
   },
   documentFile: { type: String, required: true },
-  previewImage: {
-    type: String, // Path or URL to the preview image
-    required: true,
-  },
+  audioFile: { type: String, required: true },
+  previewImage: { type: String, required: true },
 });
 
-const DocumentSongFile = mongoose.model(
-  "DocumentSongFile",
-  documentSongFileSchema
-);
+const SongMediaFile = mongoose.model("SongMediaFile", songMediaFilesSchema);
 
-function validateDocumentSongFile(file) {
+function validateSongMediaFile(file) {
   const schema = Joi.object({
     song: Joi.objectId().required(),
     notation: Joi.objectId().required(),
     documentFile: Joi.string().required(),
+    audioFile: Joi.string().required(),
     previewImage: Joi.string().required(),
   });
 
   return schema.validate(file);
 }
 
-exports.documentSongFileSchema = documentSongFileSchema;
-exports.DocumentFile = DocumentSongFile;
-exports.validate = validateDocumentSongFile;
+exports.SongMediaFileSchema = songMediaFilesSchema;
+exports.SongMediaFile = SongMediaFile;
+exports.validate = validateSongMediaFile;

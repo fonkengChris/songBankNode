@@ -3,7 +3,7 @@ const users = require("../routes/users");
 const auth = require("../routes/auth");
 const change_password = require("../routes/change_password");
 const songs = require("../routes/songs");
-const document_files = require("../routes/document_files");
+const media_files = require("../routes/media_files");
 const audio_files = require("../routes/audio_files");
 const image_files = require("../routes/preview_images");
 const customers = require("../routes/customers");
@@ -19,7 +19,7 @@ module.exports = function (app) {
   app.use("/api/auth", auth);
   app.use("/api/change_password", change_password);
   app.use("/api/songs", songs);
-  app.use("/api/documents", document_files);
+  app.use("/api/media_files", media_files);
   app.use("/api/audios", audio_files);
   app.use("/api/images", image_files);
   app.use("/api/languages", languages);

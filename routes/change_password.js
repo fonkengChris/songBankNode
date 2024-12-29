@@ -6,6 +6,8 @@ const auth = require("../middleware/auth");
 const express = require("express");
 const router = express.Router();
 
+const PWD_REGEX = /^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[!@#$%]).{8,50}$/;
+
 router.post("/:id", auth, async (req, res) => {
   const { error } = validate(req.body);
   if (error) return res.status(400).send(error.message);
@@ -30,10 +32,12 @@ router.post("/:id", auth, async (req, res) => {
 function validate(req) {
   const schema = Joi.object({
     old_password: Joi.string().required(),
-    password: Joi.string().required(),
+    password: Joi.string().pattern(PWD_REGEX).required().messages({
+      "string.pattern.base":
+        "Password must be 8-50 characters long, include at least one lowercase letter, one uppercase letter, one number, and one special character (!@#$%).",
+    }),
   });
 
   return schema.validate(req);
 }
-
 module.exports = router;

@@ -8,13 +8,12 @@ const router = express.Router();
 
 router.get("/", async (req, res) => {
   try {
-    // Extract query parameters
     const { category, language, notation, sortOrder, searchText } = req.query;
 
     // Build the aggregation pipeline
     let pipeline = [];
 
-    // Filter on Song model fields
+    // Filter based on category and language
     let songMatch = {};
     if (category) songMatch.category = new mongoose.Types.ObjectId(category);
     if (language) songMatch.language = new mongoose.Types.ObjectId(language);
@@ -28,67 +27,101 @@ router.get("/", async (req, res) => {
       pipeline.push({ $match: songMatch });
     }
 
-    // Lookup to join with documentFiles collection
+    // Lookup mediaFiles
     pipeline.push({
       $lookup: {
-        from: "documentsongfiles", // Ensure this matches the actual collection name
-        localField: "documentFiles",
+        from: "songmediafiles", // Collection name in MongoDB
+        localField: "mediaFiles",
         foreignField: "_id",
-        as: "documentFiles",
+        as: "mediaFiles",
       },
     });
 
-    // If notationId is provided, filter by notationId in the documentFiles array
+    // Unwind mediaFiles to allow individual filtering
+    pipeline.push({
+      $unwind: {
+        path: "$mediaFiles",
+        preserveNullAndEmptyArrays: false, // Remove songs without mediaFiles
+      },
+    });
+
+    // Filter mediaFiles by notation if provided
     if (notation) {
-      pipeline.push({ $unwind: "$documentFiles" });
       pipeline.push({
         $match: {
-          "documentFiles.notation": new mongoose.Types.ObjectId(notation),
-        },
-      });
-      pipeline.push({
-        $group: {
-          _id: "$_id",
-          title: { $first: "$title" },
-          slug: { $first: "$slug" },
-          authorName: { $first: "$authorName" },
-          description: { $first: "$description" },
-          lastUpdate: { $first: "$lastUpdate" },
-          likesCount: { $first: "$likesCount" },
-          lyrics: { $first: "$lyrics" },
-          metacritic: { $first: "$metacritic" },
-          views: { $first: "$views" },
-          language: { $first: "$language" },
-          category: { $first: "$category" },
-          documentFiles: { $push: "$documentFiles" },
-          audioFile: { $first: "$audioFile" },
+          "mediaFiles.notation": new mongoose.Types.ObjectId(notation),
         },
       });
     }
 
-    // Lookup to join with audioFile collection
+    // Re-group songs back together with filtered mediaFiles
     pipeline.push({
-      $lookup: {
-        from: "audiosongfiles", // Ensure this matches the actual collection name
-        localField: "audioFile",
-        foreignField: "_id",
-        as: "audioFile",
+      $group: {
+        _id: "$_id",
+        title: { $first: "$title" },
+        slug: { $first: "$slug" },
+        authorName: { $first: "$authorName" },
+        description: { $first: "$description" },
+        lastUpdate: { $first: "$lastUpdate" },
+        likesCount: { $first: "$likesCount" },
+        lyrics: { $first: "$lyrics" },
+        metacritic: { $first: "$metacritic" },
+        views: { $first: "$views" },
+        language: { $first: "$language" },
+        category: { $first: "$category" },
+        mediaFiles: { $push: "$mediaFiles" }, // Aggregate only filtered mediaFiles
+        audioFile: { $first: "$audioFile" },
+        languageOverride: { $first: "$languageOverride" },
       },
     });
 
-    // Sort the results if sortOrder is provided
-    if (req.query.sortOrder) {
-      let sortField = req.query.sortOrder;
-      let sortDirection = 1; // Default to ascending order
+    // Lookup language
+    pipeline.push({
+      $lookup: {
+        from: "languages",
+        localField: "language",
+        foreignField: "_id",
+        as: "language",
+      },
+    });
 
-      // If sortOrder starts with "-", interpret it as descending
+    // Unwind language to simplify structure
+    pipeline.push({
+      $unwind: {
+        path: "$language",
+        preserveNullAndEmptyArrays: true,
+      },
+    });
+
+    // Lookup category
+    pipeline.push({
+      $lookup: {
+        from: "categories",
+        localField: "category",
+        foreignField: "_id",
+        as: "category",
+      },
+    });
+
+    // Unwind category to simplify structure
+    pipeline.push({
+      $unwind: {
+        path: "$category",
+        preserveNullAndEmptyArrays: true,
+      },
+    });
+
+    // Sorting logic
+    if (sortOrder) {
+      let sortField = sortOrder;
+      let sortDirection = 1;
+
       if (sortField.startsWith("-")) {
         sortDirection = -1;
-        sortField = sortField.substring(1); // Remove the "-" sign to get the field name
+        sortField = sortField.substring(1);
       }
 
-      const allowedSortFields = ["title", "metacritic", "last_update"];
-
+      const allowedSortFields = ["title", "metacritic", "lastUpdate"];
       if (allowedSortFields.includes(sortField)) {
         const sortObject = {};
         sortObject[sortField] = sortDirection;
@@ -105,6 +138,7 @@ router.get("/", async (req, res) => {
     // Execute the aggregation pipeline
     let songs = await Song.aggregate(pipeline);
 
+    // Send the result back
     res.send(songs);
   } catch (error) {
     console.error(error);
@@ -127,8 +161,7 @@ router.post("/", [auth, admin], async (req, res) => {
     lyrics: req.body.lyrics,
     language: req.body.language,
     category: req.body.category,
-    documentFiles: req.body.documentFiles,
-    audioFile: req.body.audioFile,
+    mediaFiles: req.body.mediaFiles,
   });
   song = await song.save();
   res.send(song);
@@ -148,8 +181,7 @@ router.put("/:id", [auth, admin, validateObjectId], async (req, res) => {
       lyrics: req.body.lyrics,
       language: req.body.language,
       category: req.body.category,
-      documentFiles: req.body.documentFiles,
-      audioFile: req.body.audioFile,
+      mediaFiles: req.body.mediaFiles,
     },
     { new: true }
   );
@@ -160,19 +192,32 @@ router.put("/:id", [auth, admin, validateObjectId], async (req, res) => {
 });
 
 router.patch("/:id", [auth, validateObjectId], async (req, res) => {
-  const song = await Song.findByIdAndUpdate(
-    req.params.id,
-    {
-      views: req.body.views,
-      likesCount: req.body.likesCount,
-    },
-    { new: true }
-  );
-  song.updateMetacritic();
+  try {
+    // Validate the likesCount
+    if (
+      req.body.likesCount == null ||
+      typeof req.body.likesCount !== "number"
+    ) {
+      return res.status(400).send("Invalid likesCount");
+    }
 
-  if (!song) return res.status(404).send("song not found");
+    const song = await Song.findByIdAndUpdate(
+      req.params.id,
+      { likesCount: req.body.likesCount },
+      { new: true }
+    );
 
-  res.send(song);
+    if (!song) return res.status(404).send("Song not found");
+
+    // Perform post-update actions
+    await song.updateMetacritic();
+    await song.save();
+
+    res.send(song);
+  } catch (err) {
+    console.error("Error updating song:", err);
+    res.status(500).send("Something went wrong");
+  }
 });
 
 router.delete("/:id", [auth, admin, validateObjectId], async (req, res) => {
@@ -183,9 +228,8 @@ router.delete("/:id", [auth, admin, validateObjectId], async (req, res) => {
 });
 
 router.get("/:id", validateObjectId, async (req, res) => {
-  const song = await Song.findById(req.params.id)
-    .populate("documentFiles")
-    .populate("audioFile");
+  const song = await Song.findById(req.params.id).populate("mediaFiles");
+  // .populate("audioFile");
   if (!song) return res.status(404).send("song not found");
   res.send(song);
 });

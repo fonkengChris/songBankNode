@@ -1,52 +1,71 @@
 const auth = require("../middleware/auth");
 const admin = require("../middleware/admin");
-const { DocumentFile, validate } = require("../modules/document_song_file");
 const mongoose = require("mongoose");
 const express = require("express");
 const validateObjectId = require("../middleware/validateObjectId");
-const preview_image = require("../modules/preview_image");
 const router = express.Router();
 const path = require("path");
+const { SongMediaFile, validate } = require("../modules/song_media_file");
+const { Song } = require("../modules/song");
 
 router.get("/", async (req, res) => {
-  const document_files = await DocumentFile.find().sort("_id");
-  res.send(document_files);
+  const mediaFiles = await SongMediaFile.find().populate("song").sort("_id");
+  res.send(mediaFiles);
 });
 
 router.post("/", [auth, admin], async (req, res) => {
   const { error } = validate(req.body);
   if (error) return res.status(400).send(error.message);
 
-  let document_file = new DocumentFile({
+  let mediaFile = new SongMediaFile({
     song: req.body.song,
     notation: req.body.notation,
     documentFile: req.body.documentFile,
+    audioFile: req.body.audioFile,
     previewImage: req.body.previewImage,
   });
-  document_file = await document_file.save();
-  res.send(document_file);
+  mediaFile = await mediaFile.save();
+  res.send(mediaFile);
 });
 
 router.put("/:id", [auth, admin, validateObjectId], async (req, res) => {
   const { error } = validate(req.body);
   if (error) return res.status(400).send(error.message);
-  const document_file = await DocumentFile.findByIdAndUpdate(req.params.id, {
+  const mediaFile = await SongMediaFile.findByIdAndUpdate(req.params.id, {
     song: req.body.song,
     notation: req.body.notation,
-    documentFile: req.body.documentFile,
+    mediaFile: req.body.mediaFile,
+    audioFile: req.body.audioFile,
     previewImage: req.body.previewImage,
   });
 
-  if (!document_file) return res.status(404).send("document_file not found");
+  if (!mediaFile) return res.status(404).send("document_file not found");
 
-  res.send(document_file);
+  res.send(mediaFile);
 });
 
 router.delete("/:id", [auth, admin, validateObjectId], async (req, res) => {
-  const document_file = await DocumentFile.findByIdAndDelete(req.params.id);
-  if (!document_file) return res.status(404).send("document_file not found");
+  const mediaFile = await SongMediaFile.findByIdAndDelete(req.params.id);
+  if (!mediaFile) return res.status(404).send("document_file not found");
 
-  res.send(document_file);
+  res.send(mediaFile);
+});
+
+// router.get("/:id", async (req, res) => {
+router.get("/:id", [auth, validateObjectId], async (req, res) => {
+  // console.log("GET /:id route hit for mediaFile:", req.params.id);
+  const mediaFile = await SongMediaFile.findById(req.params.id).populate(
+    "song"
+  );
+  const song = await Song.findByIdAndUpdate(mediaFile.song._id, {
+    $inc: { views: 1 },
+  });
+  song.updateMetacritic();
+  song.save();
+
+  if (!mediaFile) return res.status(404).send("document_file not found");
+
+  res.send(mediaFile);
 });
 
 router.get("/:type/:filename", validateObjectId, async (req, res) => {
@@ -62,7 +81,3 @@ router.get("/:type/:filename", validateObjectId, async (req, res) => {
 });
 
 module.exports = router;
-
-// const document_file = await DocumentFile.findById(req.params.id);
-// if (!document_file) return res.status(404).send("document_file not found");
-// res.send(document_file);

@@ -23,36 +23,14 @@ const songSchema = new mongoose.Schema({
     required: true,
   },
 
-  documentFiles: [
-    { type: mongoose.Schema.Types.ObjectId, ref: "DocumentSongFile" },
-  ],
-  audioFile: { type: mongoose.Schema.Types.ObjectId, ref: "AudioSongFile" },
+  mediaFiles: [{ type: mongoose.Schema.Types.ObjectId, ref: "SongMediaFile" }],
   languageOverride: String,
 });
 
-// Create a text index on multiple fields
-// songSchema.index(
-//   {
-//     title: "text",
-//     authorName: "text",
-//     description: "text",
-//     lyrics: "text",
-//   },
-//   {
-//     weights: {
-//       title: 5,
-//       authorName: 3,
-//       lyrics: 3,
-//       description: 2,
-//     },
-//   }
-// );
-
-//Created the indexes directly on the database.
-
 songSchema.methods.updateMetacritic = function () {
   //calculate and save the Popularity score
-  this.metacritic = this.likesCount * (1 + this.likesCount / this.views) * 100;
+  // this.metacritic = this.likesCount * (1 + this.likesCount / this.views) * 100;
+  this.metacritic = 2 * this.likesCount + this.views;
 };
 
 const Song = mongoose.model("Song", songSchema);
@@ -70,8 +48,7 @@ function validateSongPost(song) {
     views: Joi.number(),
     language: Joi.objectId().required(),
     category: Joi.objectId().required(),
-    audioFileId: Joi.objectId(),
-    documentFiles: Joi.array().items(Joi.objectId()).min(1),
+    mediaFiles: Joi.array().items(Joi.objectId()).min(1),
     languageOverride: Joi.string(),
   });
 
@@ -91,8 +68,7 @@ function validateSongPut(song) {
     views: Joi.number(),
     language: Joi.objectId(),
     category: Joi.objectId(),
-    audioFile: Joi.objectId(),
-    documentFiles: Joi.array().items(Joi.objectId()).min(1),
+    mediaFiles: Joi.array().items(Joi.objectId()).min(1),
   });
 
   return schema.validate(song);
