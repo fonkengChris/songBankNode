@@ -46,8 +46,12 @@ function validateSongPost(song) {
     lyrics: Joi.string(),
     metacritic: Joi.number(),
     views: Joi.number(),
-    language: Joi.objectId().required(),
-    category: Joi.objectId().required(),
+    language: Joi.string().required(),
+    category: Joi.object({
+      _id: Joi.string().required(),
+      title: Joi.string().required(),
+      __v: Joi.number(),
+    }).required(),
     mediaFiles: Joi.array().items(Joi.objectId()).min(1),
     languageOverride: Joi.string(),
   });
@@ -57,18 +61,32 @@ function validateSongPost(song) {
 
 function validateSongPut(song) {
   const schema = Joi.object({
-    title: Joi.string().max(255),
-    slug: Joi.string().max(255),
-    authorName: Joi.string().max(255),
-    description: Joi.string(),
-    lastUpdate: Joi.date(),
-    likesCount: Joi.number(),
-    lyrics: Joi.string(),
-    metacritic: Joi.number(),
-    views: Joi.number(),
-    language: Joi.objectId(),
-    category: Joi.objectId(),
-    mediaFiles: Joi.array().items(Joi.objectId()).min(1),
+    title: Joi.string().min(3).max(255).required(),
+    slug: Joi.string().min(3).max(255).required(),
+    authorName: Joi.string().min(3).max(255).required(),
+    description: Joi.string().min(3).required(),
+    lyrics: Joi.string().min(3).required(),
+    language: Joi.string().required(),
+    category: Joi.object({
+      _id: Joi.string().required(),
+      title: Joi.string(),
+      __v: Joi.number(),
+    }).required(),
+    mediaFiles: Joi.array().items(
+      Joi.object({
+        _id: Joi.string().required(),
+        documentFile: Joi.string().required(),
+        audioFile: Joi.string().required(),
+        previewImage: Joi.string().required(),
+        notation: Joi.object({
+          _id: Joi.string().required(),
+          title: Joi.string(),
+          slug: Joi.string(),
+          __v: Joi.number(),
+        }).required(),
+        song: Joi.object().optional(), // This field isn't needed for the DB
+      })
+    ),
   });
 
   return schema.validate(song);

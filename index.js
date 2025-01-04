@@ -1,30 +1,27 @@
 const winston = require("winston");
 const express = require("express");
-const cors = require("cors");
 const app = express();
 
-app.use(
-  cors({
-    origin: "http://127.0.0.1:5173", // Allow the frontend origin
-    // origin: "*", // Allow the frontend origin
-    methods: ["GET", "POST", "PATCH", "DELETE"], // Include PATCH method
-    allowedHeaders: ["Content-Type", "X-Auth-Token"], // Include necessary headers
-  })
-);
+// Add this line for debugging
+// app.use((req, res, next) => {
+//   res.on("finish", () => {
+//     console.log("Response Headers:", res.getHeaders());
+//   });
+//   next();
+// });
 
-app.options("*", (req, res) => {
-  res.header("Access-Control-Allow-Origin", "http://127.0.0.1:5173");
-  res.header("Access-Control-Allow-Methods", "GET, POST, PATCH, DELETE");
-  res.header("Access-Control-Allow-Headers", "Content-Type, X-Auth-Token");
-  res.sendStatus(200);
-});
+// CORS must be first
+require("./startup/cors")(app);
 
+// Then body parser
+app.use(express.json());
+
+// Then other middleware
 require("./startup/logging")();
 require("./startup/routes")(app);
 require("./startup/db-connection")();
 require("./startup/config")();
 require("./startup/validation")();
-// require("./startup/prod")(app);
 
 const port = process.env.PORT || 3000;
 
