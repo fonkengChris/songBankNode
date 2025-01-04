@@ -20,7 +20,7 @@ router.post("/", [auth, admin], async (req, res) => {
   res.send(category);
 });
 
-router.put("/:id", [auth, admin, validateObjectId], async (req, res) => {
+router.patch("/:id", [auth, admin, validateObjectId], async (req, res) => {
   const { error } = validate(req.body);
   if (error) return res.status(400).send(error.message);
   const category = await Category.findByIdAndUpdate(

@@ -24,6 +24,13 @@ const complexityOptions = {
   requirementCount: 4,
 };
 
+// Add role enum constant
+const ROLES = {
+  REGULAR: "regular",
+  ADMIN: "admin",
+  SUPER_ADMIN: "superAdmin",
+};
+
 const userSchema = new mongoose.Schema({
   name: {
     type: String,
@@ -45,9 +52,11 @@ const userSchema = new mongoose.Schema({
     minlength: 8,
     maxlength: 1024,
   },
-  isAdmin: {
-    type: Boolean,
-    default: false,
+  role: {
+    type: String,
+    enum: Object.values(ROLES),
+    default: ROLES.REGULAR,
+    required: true,
   },
 });
 
@@ -58,7 +67,7 @@ userSchema.methods.generateAccessToken = function () {
       _id: this._id,
       name: this.name,
       email: this.email,
-      isAdmin: this.isAdmin,
+      role: this.role,
     },
     ACCESS_TOKEN_SECRET,
     {
@@ -75,7 +84,7 @@ userSchema.methods.generateRefreshToken = function () {
       _id: this._id,
       name: this.name,
       email: this.email,
-      isAdmin: this.isAdmin,
+      role: this.role,
     },
     REFRESH_TOKEN_SECRET,
     {
@@ -87,7 +96,7 @@ userSchema.methods.generateRefreshToken = function () {
 
 const User = mongoose.model("User", userSchema);
 
-function validateUser(user) {
+function validateUserPost(user) {
   const schema = Joi.object({
     name: Joi.string().min(5).max(255).required(),
     email: Joi.string().min(5).max(255).required().email(),
@@ -97,5 +106,18 @@ function validateUser(user) {
   return schema.validate(user);
 }
 
+function validateUserPut(user) {
+  const schema = Joi.object({
+    name: Joi.string().min(5).max(255).required(),
+    email: Joi.string().min(5).max(255).required().email(),
+    role: Joi.string().valid(...Object.values(ROLES)),
+  });
+
+  return schema.validate(user);
+}
+
+// Export ROLES enum
+exports.ROLES = ROLES;
 exports.User = User;
-exports.validate = validateUser;
+exports.validatePost = validateUserPost;
+exports.validatePut = validateUserPut;

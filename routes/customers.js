@@ -6,7 +6,7 @@ const admin = require("../middleware/admin");
 const router = express.Router();
 
 router.get("/", async (req, res) => {
-  const customers = await Customer.find().sort("name");
+  const customers = await Customer.find().populate("user").sort("name");
   res.send(customers);
 });
 
