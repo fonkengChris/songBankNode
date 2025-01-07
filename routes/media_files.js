@@ -8,10 +8,10 @@ const path = require("path");
 const { SongMediaFile, validate } = require("../modules/song_media_file");
 const { Song } = require("../modules/song");
 
-router.use((req, res, next) => {
-  console.info(`[info]: Media route accessed: ${req.method} ${req.url}`);
-  next();
-});
+// router.use((req, res, next) => {
+//   console.info(`[info]: Media route accessed: ${req.method} ${req.url}`);
+//   next();
+// });
 
 router.get("/", async (req, res) => {
   const mediaFiles = await SongMediaFile.find()
@@ -26,7 +26,8 @@ router.post("/", [auth, admin], async (req, res) => {
   if (error) return res.status(400).send(error.message);
 
   let mediaFile = new SongMediaFile({
-    song: req.body.song,
+    // song: req.body.song,
+    name: req.body.name,
     notation: req.body.notation,
     documentFile: req.body.documentFile,
     audioFile: req.body.audioFile,
@@ -41,6 +42,7 @@ router.put("/:id", [auth, admin, validateObjectId], async (req, res) => {
   if (error) return res.status(400).send(error.message);
   const mediaFile = await SongMediaFile.findByIdAndUpdate(req.params.id, {
     song: req.body.song,
+    name: req.body.name,
     notation: req.body.notation,
     documentFile: req.body.documentFile,
     audioFile: req.body.audioFile,
@@ -61,27 +63,21 @@ router.delete("/:id", [auth, admin, validateObjectId], async (req, res) => {
 
 router.get("/:id", [auth, validateObjectId], async (req, res) => {
   try {
-    // console.info(
-    //   `[info]: Attempting to find mediaFile with ID: ${req.params.id}`
-    // );
-
     const mediaFile = await SongMediaFile.findById(req.params.id)
       .populate("song")
       .populate("notation");
 
-    // console.info(`[info]: MediaFile found: ${JSON.stringify(mediaFile)}`);
-
     if (!mediaFile) return res.status(404).send("document_file not found");
 
-    const song = await Song.findByIdAndUpdate(mediaFile.song._id, {
-      $inc: { views: 1 },
-    });
+    if (mediaFile.song) {
+      const song = await Song.findByIdAndUpdate(mediaFile.song._id, {
+        $inc: { views: 1 },
+      });
 
-    // console.info(`[info]: Song found: ${JSON.stringify(song)}`);
-
-    if (song) {
-      await song.updateMetacritic();
-      await song.save();
+      if (song) {
+        await song.updateMetacritic();
+        await song.save();
+      }
     }
 
     res.send(mediaFile);

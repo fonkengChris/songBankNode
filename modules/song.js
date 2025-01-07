@@ -47,11 +47,7 @@ function validateSongPost(song) {
     metacritic: Joi.number(),
     views: Joi.number(),
     language: Joi.string().required(),
-    category: Joi.object({
-      _id: Joi.string().required(),
-      title: Joi.string().required(),
-      __v: Joi.number(),
-    }).required(),
+    category: Joi.string().required(),
     mediaFiles: Joi.array().items(Joi.objectId()).min(1),
     languageOverride: Joi.string(),
   });
@@ -72,21 +68,7 @@ function validateSongPut(song) {
       title: Joi.string(),
       __v: Joi.number(),
     }).required(),
-    mediaFiles: Joi.array().items(
-      Joi.object({
-        _id: Joi.string().required(),
-        documentFile: Joi.string().required(),
-        audioFile: Joi.string().required(),
-        previewImage: Joi.string().required(),
-        notation: Joi.object({
-          _id: Joi.string().required(),
-          title: Joi.string(),
-          slug: Joi.string(),
-          __v: Joi.number(),
-        }).required(),
-        song: Joi.object().optional(), // This field isn't needed for the DB
-      })
-    ),
+    mediaFiles: Joi.array().items(Joi.objectId()).min(1),
   });
 
   return schema.validate(song);

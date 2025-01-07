@@ -12,9 +12,12 @@ const notations = require("../routes/notations");
 const categories = require("../routes/categories");
 const error = require("../middleware/error");
 const path = require("path");
+const googleAuth = require("../routes/google-auth");
 
 module.exports = function (app) {
-  // app.use(express.json());
+  app.use(express.json());
+
+  // API routes
   app.use("/api/users", users);
   app.use("/api/auth", auth);
   app.use("/api/change_password", change_password);
@@ -26,8 +29,11 @@ module.exports = function (app) {
   app.use("/api/notations", notations);
   app.use("/api/categories", categories);
   app.use("/api/customers", customers);
-  app.use("/api/categories", categories);
+  app.use("/api/auth/google", googleAuth);
+
+  // Static files
   app.use("/media", express.static(path.join(__dirname, "../media")));
 
+  // Error handling should be last
   app.use(error);
 };

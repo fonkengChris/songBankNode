@@ -5,6 +5,9 @@ const mongoose = require("mongoose");
 const express = require("express");
 const router = express.Router();
 
+const ACCESS_TOKEN_SECRET =
+  process.env.ACCESS_TOKEN_SECRET || "your-access-token-secret";
+
 router.post("/", async (req, res) => {
   const { error } = validate(req.body);
   if (error) return res.status(400).send(error.message);
@@ -15,17 +18,8 @@ router.post("/", async (req, res) => {
   const validPassword = await bcrypt.compare(req.body.password, user.password);
   if (!validPassword) return res.status(400).send("Invalid email or password.");
 
-  // Generate tokens
+  // Generate only access token
   const accessToken = user.generateAccessToken();
-  const refreshToken = user.generateRefreshToken();
-
-  // Send refresh token as an HTTP-only cookie
-  res.cookie("refreshToken", refreshToken, {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === "production", // Use secure cookies in production
-    sameSite: "lax",
-    maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
-  });
 
   res.json({ accessToken });
 });

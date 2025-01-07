@@ -3,7 +3,12 @@ const mongoose = require("mongoose");
 const Joi = require("joi");
 
 const songMediaFilesSchema = new mongoose.Schema({
-  song: { type: mongoose.Schema.Types.ObjectId, ref: "Song", required: true },
+  song: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Song",
+    default: null,
+  },
+  name: { type: String, required: true },
   notation: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "Notation",
@@ -18,10 +23,11 @@ const SongMediaFile = mongoose.model("SongMediaFile", songMediaFilesSchema);
 
 function validateSongMediaFile(file) {
   const schema = Joi.object({
-    song: Joi.objectId().required(),
-    notation: Joi.objectId().required(),
+    song: Joi.alternatives().try(Joi.objectId(), Joi.valid(null, "")),
+    name: Joi.string().required(),
+    notation: Joi.objectId().allow(null),
     documentFile: Joi.string().required(),
-    audioFile: Joi.string(),
+    audioFile: Joi.string().required(),
     previewImage: Joi.string().required(),
   });
 

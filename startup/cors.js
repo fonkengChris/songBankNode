@@ -23,6 +23,7 @@ module.exports = function (app) {
       "sec-ch-ua-mobile",
       "sec-ch-ua-platform",
     ],
+    exposedHeaders: ["set-cookie"],
     credentials: true,
     optionsSuccessStatus: 200,
     maxAge: 3600,

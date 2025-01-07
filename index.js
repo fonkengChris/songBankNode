@@ -1,6 +1,7 @@
 const winston = require("winston");
 const express = require("express");
 const app = express();
+const passport = require("passport");
 
 // Add this line for debugging
 // app.use((req, res, next) => {
@@ -13,10 +14,14 @@ const app = express();
 // CORS must be first
 require("./startup/cors")(app);
 
-// Then body parser
+// Body parser middleware
 app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
-// Then other middleware
+// Initialize passport
+app.use(passport.initialize());
+
+// Other middleware and setup
 require("./startup/logging")();
 require("./startup/routes")(app);
 require("./startup/db-connection")();

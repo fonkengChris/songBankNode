@@ -7,10 +7,7 @@ const dotenv = require("dotenv");
 // Environment variables for secret keys and token expirations
 const ACCESS_TOKEN_SECRET =
   process.env.ACCESS_TOKEN_SECRET || "your-access-token-secret";
-const REFRESH_TOKEN_SECRET =
-  process.env.REFRESH_TOKEN_SECRET || "your-refresh-token-secret";
-const ACCESS_TOKEN_EXPIRY = "15m"; // Access token expires in 15 minutes
-const REFRESH_TOKEN_EXPIRY = "7d"; // Refresh token expires in 7 days
+const ACCESS_TOKEN_EXPIRY = "1d"; // Increased from 15m since we're not using refresh tokens
 
 dotenv.config();
 
@@ -58,6 +55,14 @@ const userSchema = new mongoose.Schema({
     default: ROLES.REGULAR,
     required: true,
   },
+  googleId: {
+    type: String,
+    unique: true,
+    sparse: true,
+  },
+  picture: {
+    type: String,
+  },
 });
 
 //Generate access token
@@ -72,23 +77,6 @@ userSchema.methods.generateAccessToken = function () {
     ACCESS_TOKEN_SECRET,
     {
       expiresIn: ACCESS_TOKEN_EXPIRY,
-    }
-  );
-  return token;
-};
-
-//Generate refresh token
-userSchema.methods.generateRefreshToken = function () {
-  const token = jwt.sign(
-    {
-      _id: this._id,
-      name: this.name,
-      email: this.email,
-      role: this.role,
-    },
-    REFRESH_TOKEN_SECRET,
-    {
-      expiresIn: REFRESH_TOKEN_EXPIRY,
     }
   );
   return token;

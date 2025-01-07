@@ -168,11 +168,6 @@ router.post("/", [auth, admin], async (req, res) => {
     const language = await Language.findOne({ name: req.body.language });
     if (!language) return res.status(400).send("Invalid language name");
 
-    // Extract category ID from request body
-    const categoryId = req.body.category._id;
-    const category = await Category.findById(categoryId);
-    if (!category) return res.status(400).send("Invalid category ID");
-
     let song = new Song({
       title: req.body.title,
       slug: req.body.slug,
@@ -181,7 +176,7 @@ router.post("/", [auth, admin], async (req, res) => {
       lastUpdate: req.body.lastUpdate,
       lyrics: req.body.lyrics,
       language: language._id,
-      category: categoryId,
+      category: req.body.category,
       mediaFiles: req.body.mediaFiles,
     });
 
@@ -203,6 +198,7 @@ router.put("/:id", [auth, admin, validateObjectId], async (req, res) => {
       const mediaFilePromises = req.body.mediaFiles.map(async (mediaFile) => {
         const newMediaFile = new SongMediaFile({
           song: req.params.id, // Reference to the song being updated
+          name: mediaFile.name,
           documentFile: mediaFile.documentFile,
           audioFile: mediaFile.audioFile,
           previewImage: mediaFile.previewImage,
