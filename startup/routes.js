@@ -13,9 +13,19 @@ const categories = require("../routes/categories");
 const error = require("../middleware/error");
 const path = require("path");
 const googleAuth = require("../routes/google-auth");
+const passwordReset = require("../routes/password-reset");
 
 module.exports = function (app) {
+  // Body parsing middleware
   app.use(express.json());
+  app.use(express.urlencoded({ extended: true }));
+
+  // Debug middleware for routes
+  // app.use((req, res, next) => {
+  //   console.log("\n=== Route Handler ===");
+  //   console.log("Headers before route:", res.getHeaders());
+  //   next();
+  // });
 
   // API routes
   app.use("/api/users", users);
@@ -30,10 +40,11 @@ module.exports = function (app) {
   app.use("/api/categories", categories);
   app.use("/api/customers", customers);
   app.use("/api/auth/google", googleAuth);
+  app.use("/api/auth/password-reset", passwordReset);
 
   // Static files
   app.use("/media", express.static(path.join(__dirname, "../media")));
 
-  // Error handling should be last
+  // Error handling middleware
   app.use(error);
 };

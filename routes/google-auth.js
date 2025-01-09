@@ -15,11 +15,11 @@ const client = new OAuth2Client(GOOGLE_CLIENT_ID);
 const router = express.Router();
 
 // Add console.log to debug the values
-console.log("OAuth Config:", {
-  clientID: GOOGLE_CLIENT_ID,
-  clientSecret: GOOGLE_CLIENT_SECRET,
-  callbackURL: GOOGLE_CALLBACK_URL,
-});
+// console.log("OAuth Config:", {
+//   clientID: GOOGLE_CLIENT_ID,
+//   clientSecret: GOOGLE_CLIENT_SECRET,
+//   callbackURL: GOOGLE_CALLBACK_URL,
+// });
 
 passport.use(
   new GoogleStrategy(

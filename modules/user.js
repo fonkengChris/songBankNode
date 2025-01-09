@@ -63,6 +63,14 @@ const userSchema = new mongoose.Schema({
   picture: {
     type: String,
   },
+  resetToken: {
+    type: String,
+    sparse: true,
+  },
+  resetTokenExpiry: {
+    type: Date,
+    sparse: true,
+  },
 });
 
 //Generate access token
