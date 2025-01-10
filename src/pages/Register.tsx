@@ -1,22 +1,21 @@
 const handleGoogleSuccess = async (response: any) => {
   try {
     const result = await axios.post(
-      'auth/google/google-register',  // Update this URL
+      "auth/google/google-register", // Update this URL
       { token: response.credential },
       {
-        baseURL: 'http://localhost:3000/api/',
+        baseURL: "http://localhost:3000/api/",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
-        withCredentials: true
+        withCredentials: true,
       }
     );
-    
+
     // Handle success
-    console.log('Registration successful:', result.data);
-    
+    console.log("Registration successful:", result.data);
   } catch (error) {
-    console.error('Registration failed:', error);
+    console.error("Registration failed:", error);
     // Handle error appropriately
   }
-}; 
+};

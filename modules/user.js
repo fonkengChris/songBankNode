@@ -54,6 +54,7 @@ const userSchema = new mongoose.Schema({
     enum: Object.values(ROLES),
     default: ROLES.REGULAR,
     required: true,
+<<<<<<< HEAD
   },
   googleId: {
     type: String,
@@ -70,6 +71,8 @@ const userSchema = new mongoose.Schema({
   resetTokenExpiry: {
     type: Date,
     sparse: true,
+=======
+>>>>>>> 945c8294543076a0cb6589af7ad545e2b4e656b4
   },
 });
 
@@ -90,6 +93,26 @@ userSchema.methods.generateAccessToken = function () {
   return token;
 };
 
+<<<<<<< HEAD
+=======
+//Generate refresh token
+userSchema.methods.generateRefreshToken = function () {
+  const token = jwt.sign(
+    {
+      _id: this._id,
+      name: this.name,
+      email: this.email,
+      role: this.role,
+    },
+    REFRESH_TOKEN_SECRET,
+    {
+      expiresIn: REFRESH_TOKEN_EXPIRY,
+    }
+  );
+  return token;
+};
+
+>>>>>>> 945c8294543076a0cb6589af7ad545e2b4e656b4
 const User = mongoose.model("User", userSchema);
 
 function validateUserPost(user) {

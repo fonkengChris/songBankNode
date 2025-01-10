@@ -22,10 +22,22 @@ router.post("/", async (req, res) => {
 
     const accessToken = user.generateAccessToken();
 
+<<<<<<< HEAD
     res.json({ accessToken });
   } catch (error) {
     res.status(500).send("Internal Server Error");
   }
+=======
+  // Send refresh token as an HTTP-only cookie
+  res.cookie("refreshToken", refreshToken, {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production", // Use secure cookies in production
+    sameSite: "lax",
+    maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+  });
+
+  res.json({ accessToken });
+>>>>>>> 945c8294543076a0cb6589af7ad545e2b4e656b4
 });
 
 function validate(req) {

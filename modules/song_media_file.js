@@ -27,7 +27,7 @@ function validateSongMediaFile(file) {
     name: Joi.string().required(),
     notation: Joi.objectId().allow(null),
     documentFile: Joi.string().required(),
-    audioFile: Joi.string().required(),
+    audioFile: Joi.string(),
     previewImage: Joi.string().required(),
   });
 
