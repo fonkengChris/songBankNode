@@ -8,7 +8,6 @@ const router = express.Router();
 // Request password reset
 router.post("/request-reset", async (req, res) => {
   try {
-    console.log("Request body:", req.body); // Debug log
     const user = await User.findOne({ email: req.body.email });
 
     if (user) {
@@ -22,7 +21,6 @@ router.post("/request-reset", async (req, res) => {
       try {
         await sendPasswordResetEmail(user.email, resetToken);
       } catch (emailError) {
-        console.error("Email sending failed:", emailError);
         return res.status(500).send("Failed to send reset email");
       }
     }
@@ -30,7 +28,6 @@ router.post("/request-reset", async (req, res) => {
     // Always return success for security
     res.status(200).send("If the email exists, a reset link has been sent.");
   } catch (error) {
-    console.error("Password reset request error:", error);
     res.status(500).send("Internal Server Error");
   }
 });
@@ -40,19 +37,10 @@ router.post("/reset-password", async (req, res) => {
   try {
     const { token, password } = req.body;
 
-    console.log("Received token:", token); // Debug log
-    console.log("Received password:", !!password); // Debug log
-
     const user = await User.findOne({
       resetToken: token,
       resetTokenExpiry: { $gt: Date.now() },
     });
-
-    console.log("Found user:", user); // Debug log
-    console.log("Current time:", Date.now()); // Debug log
-    if (user) {
-      console.log("Token expiry:", user.resetTokenExpiry); // Debug log
-    }
 
     if (!user) {
       return res.status(400).send("Invalid or expired reset token");
@@ -66,7 +54,6 @@ router.post("/reset-password", async (req, res) => {
 
     res.status(200).send("Password successfully reset");
   } catch (error) {
-    console.error("Reset password error:", error); // Debug log
     res.status(500).send("Internal Server Error");
   }
 });

@@ -11,7 +11,19 @@ const { SongMediaFile } = require("../modules/song_media_file");
 
 router.get("/", async (req, res) => {
   try {
-    const { category, language, notation, sortOrder, searchText } = req.query;
+    const {
+      category,
+      language,
+      notation,
+      sortOrder,
+      searchText,
+      page = 1,
+      limit = 8,
+    } = req.query;
+
+    // Convert page and limit to numbers
+    const pageNum = parseInt(page);
+    const limitNum = parseInt(limit);
 
     // Build the aggregation pipeline
     let pipeline = [];
@@ -146,11 +158,28 @@ router.get("/", async (req, res) => {
       }
     }
 
+    // Add pagination after all other operations (except sorting)
+    pipeline.push({ $skip: (pageNum - 1) * limitNum }, { $limit: limitNum });
+
     // Execute the aggregation pipeline
     let songs = await Song.aggregate(pipeline);
 
-    // Send the result back
-    res.send(songs);
+    // Get total count for pagination
+    const countPipeline = pipeline.slice(0, -2); // Remove skip and limit
+    countPipeline.push({ $count: "total" });
+    const [countResult] = await Song.aggregate(countPipeline);
+    const total = countResult ? countResult.total : 0;
+
+    // Send the result back with pagination metadata
+    res.send({
+      songs,
+      pagination: {
+        currentPage: pageNum,
+        totalPages: Math.ceil(total / limitNum),
+        totalItems: total,
+        hasMore: pageNum * limitNum < total,
+      },
+    });
   } catch (error) {
     console.error(error);
     res
