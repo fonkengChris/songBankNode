@@ -16,7 +16,6 @@ const googleAuth = require("../routes/google-auth");
 const passwordReset = require("../routes/password-reset");
 
 module.exports = function (app) {
-<<<<<<< HEAD
   // Body parsing middleware
   app.use(express.json());
   app.use(express.urlencoded({ extended: true }));
@@ -29,9 +28,6 @@ module.exports = function (app) {
   // });
 
   // API routes
-=======
-  // app.use(express.json());
->>>>>>> 945c8294543076a0cb6589af7ad545e2b4e656b4
   app.use("/api/users", users);
   app.use("/api/auth", auth);
   app.use("/api/change_password", change_password);

@@ -2,14 +2,6 @@ const Joi = require("joi");
 const jwt = require("jsonwebtoken");
 const passwordComplexity = require("joi-password-complexity");
 const mongoose = require("mongoose");
-const dotenv = require("dotenv");
-
-// Environment variables for secret keys and token expirations
-const ACCESS_TOKEN_SECRET =
-  process.env.ACCESS_TOKEN_SECRET || "your-access-token-secret";
-const ACCESS_TOKEN_EXPIRY = "1d"; // Increased from 15m since we're not using refresh tokens
-
-dotenv.config();
 
 const complexityOptions = {
   min: 8,
@@ -54,7 +46,6 @@ const userSchema = new mongoose.Schema({
     enum: Object.values(ROLES),
     default: ROLES.REGULAR,
     required: true,
-<<<<<<< HEAD
   },
   googleId: {
     type: String,
@@ -71,48 +62,21 @@ const userSchema = new mongoose.Schema({
   resetTokenExpiry: {
     type: Date,
     sparse: true,
-=======
->>>>>>> 945c8294543076a0cb6589af7ad545e2b4e656b4
   },
 });
 
 //Generate access token
 userSchema.methods.generateAccessToken = function () {
-  const token = jwt.sign(
-    {
-      _id: this._id,
-      name: this.name,
-      email: this.email,
-      role: this.role,
-    },
-    ACCESS_TOKEN_SECRET,
-    {
-      expiresIn: ACCESS_TOKEN_EXPIRY,
-    }
-  );
-  return token;
+  const payload = {
+    _id: this._id,
+    name: this.name,
+    email: this.email,
+    role: this.role,
+  };
+
+  return jwt.sign(payload, process.env.JWT_PRIVATE_KEY, { expiresIn: "24h" });
 };
 
-<<<<<<< HEAD
-=======
-//Generate refresh token
-userSchema.methods.generateRefreshToken = function () {
-  const token = jwt.sign(
-    {
-      _id: this._id,
-      name: this.name,
-      email: this.email,
-      role: this.role,
-    },
-    REFRESH_TOKEN_SECRET,
-    {
-      expiresIn: REFRESH_TOKEN_EXPIRY,
-    }
-  );
-  return token;
-};
-
->>>>>>> 945c8294543076a0cb6589af7ad545e2b4e656b4
 const User = mongoose.model("User", userSchema);
 
 function validateUserPost(user) {
