@@ -12,6 +12,7 @@ require("./startup/logging")();
 require("./startup/db-connection")();
 require("./startup/config")();
 require("./startup/validation")();
+require("./startup/prod")(app);
 
 // Error handling middleware
 app.use((err, req, res, next) => {
