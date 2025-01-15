@@ -2,7 +2,11 @@ const cors = require("cors");
 
 module.exports = function (app) {
   const corsOptions = {
-    origin: ["http://127.0.0.1:5173", "http://localhost:5173"],
+    origin: [
+      "http://127.0.0.1:5173",
+      "http://localhost:5173",
+      "https://sheet-music-library-vite-7ffed1c383be.herokuapp.com",
+    ],
     methods: ["GET", "HEAD", "PUT", "PATCH", "POST", "DELETE", "OPTIONS"],
     allowedHeaders: [
       "Content-Type",
