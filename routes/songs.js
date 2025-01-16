@@ -194,7 +194,8 @@ router.post("/", [auth, admin], async (req, res) => {
     if (error) return res.status(400).send(error.message);
 
     // Look up language and category by name
-    const language = await Language.findOne({ name: req.body.language });
+    const languageId = req.body.language._id;
+    const language = await Language.findById(languageId);
     if (!language) return res.status(400).send("Invalid language name");
 
     // Extract category ID from request body
@@ -209,7 +210,7 @@ router.post("/", [auth, admin], async (req, res) => {
       description: req.body.description,
       lastUpdate: req.body.lastUpdate,
       lyrics: req.body.lyrics,
-      language: language._id,
+      language: languageId,
       category: categoryId,
       mediaFiles: req.body.mediaFiles,
     });
