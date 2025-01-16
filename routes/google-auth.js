@@ -82,8 +82,6 @@ router.post("/google-login", async (req, res) => {
     });
 
     const payload = ticket.getPayload();
-
-    // Find or create user
     let user = await User.findOne({ email: payload.email });
 
     if (!user) {
@@ -91,6 +89,7 @@ router.post("/google-login", async (req, res) => {
         name: payload.name,
         email: payload.email,
         googleId: payload.sub,
+        picture: payload.picture,
         isAdmin: false,
       });
       await user.save();
@@ -100,8 +99,17 @@ router.post("/google-login", async (req, res) => {
     const authToken = user.generateAuthToken();
     res.send({ token: authToken });
   } catch (error) {
-    console.error("Google login error:", error);
-    res.status(401).json({ message: "Invalid token" });
+    // Send detailed error information that will show in browser console
+    res.status(401).json({
+      message: "Invalid token",
+      details: error.message,
+      clientId: GOOGLE_CLIENT_ID, // This will help verify the client ID being used
+      error: {
+        name: error.name,
+        message: error.message,
+        stack: error.stack,
+      },
+    });
   }
 });
 
