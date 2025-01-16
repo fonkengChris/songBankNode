@@ -73,11 +73,12 @@ router.get(
 router.post("/google-login", async (req, res) => {
   try {
     const { token } = req.body;
+    const client = new OAuth2Client(GOOGLE_CLIENT_ID);
 
-    // Verify the token
+    // Verify the token with explicit audience check
     const ticket = await client.verifyIdToken({
       idToken: token,
-      audience: GOOGLE_CLIENT_ID,
+      audience: GOOGLE_CLIENT_ID, // Must match exactly with your Client ID
     });
 
     const payload = ticket.getPayload();
@@ -86,13 +87,18 @@ router.post("/google-login", async (req, res) => {
     let user = await User.findOne({ email: payload.email });
 
     if (!user) {
-      return res.status(401).json({ message: "User not registered" });
+      user = new User({
+        name: payload.name,
+        email: payload.email,
+        googleId: payload.sub,
+        isAdmin: false,
+      });
+      await user.save();
     }
 
     // Generate JWT token
-    const accessToken = user.generateAccessToken();
-
-    res.json({ accessToken });
+    const authToken = user.generateAuthToken();
+    res.send({ token: authToken });
   } catch (error) {
     console.error("Google login error:", error);
     res.status(401).json({ message: "Invalid token" });
