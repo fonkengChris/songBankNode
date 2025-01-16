@@ -28,7 +28,7 @@ router.get("/", async (req, res) => {
     // Build the aggregation pipeline
     let pipeline = [];
 
-    // Filter based on category and language
+    // Filter based on category, language, and search text
     let songMatch = {};
     if (category) songMatch.category = new mongoose.Types.ObjectId(category);
     if (language) songMatch.language = new mongoose.Types.ObjectId(language);
@@ -36,6 +36,18 @@ router.get("/", async (req, res) => {
     // Full-text search if searchText is provided
     if (searchText) {
       songMatch.$text = { $search: searchText };
+      // Add text score to sort by relevance
+      pipeline.push({
+        $addFields: {
+          score: { $meta: "textScore" },
+        },
+      });
+      // Sort by text score first
+      pipeline.push({
+        $sort: {
+          score: { $meta: "textScore" },
+        },
+      });
     }
 
     if (Object.keys(songMatch).length) {
@@ -134,8 +146,9 @@ router.get("/", async (req, res) => {
       },
     });
 
-    // Sorting logic
-    if (sortOrder) {
+    // Modify sorting logic to respect text search score
+    if (sortOrder && !searchText) {
+      // Only apply manual sort if not searching
       let sortField = sortOrder;
       let sortDirection = 1;
 
