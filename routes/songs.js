@@ -21,43 +21,34 @@ router.get("/", async (req, res) => {
       limit = 8,
     } = req.query;
 
-    // Convert page and limit to numbers
     const pageNum = parseInt(page);
     const limitNum = parseInt(limit);
-
-    // Build the aggregation pipeline
     let pipeline = [];
 
-    // Filter based on category, language, and search text
-    let songMatch = {};
-    if (category) songMatch.category = new mongoose.Types.ObjectId(category);
-    if (language) songMatch.language = new mongoose.Types.ObjectId(language);
+    // Build initial match stage
+    let initialMatch = {};
+    if (category) initialMatch.category = new mongoose.Types.ObjectId(category);
+    if (language) initialMatch.language = new mongoose.Types.ObjectId(language);
+    if (searchText) initialMatch.$text = { $search: searchText };
 
-    // Full-text search if searchText is provided
+    // Add initial match as first stage
+    if (Object.keys(initialMatch).length) {
+      pipeline.push({ $match: initialMatch });
+    }
+
+    // Add text score if searching
     if (searchText) {
-      songMatch.$text = { $search: searchText };
-      // Add text score to sort by relevance
       pipeline.push({
         $addFields: {
           score: { $meta: "textScore" },
         },
       });
-      // Sort by text score first
-      pipeline.push({
-        $sort: {
-          score: { $meta: "textScore" },
-        },
-      });
-    }
-
-    if (Object.keys(songMatch).length) {
-      pipeline.push({ $match: songMatch });
     }
 
     // Lookup mediaFiles
     pipeline.push({
       $lookup: {
-        from: "songmediafiles", // Collection name in MongoDB
+        from: "songmediafiles",
         localField: "mediaFiles",
         foreignField: "_id",
         as: "mediaFiles",
@@ -146,9 +137,12 @@ router.get("/", async (req, res) => {
       },
     });
 
-    // Modify sorting logic to respect text search score
-    if (sortOrder && !searchText) {
-      // Only apply manual sort if not searching
+    // Handle sorting
+    if (searchText) {
+      pipeline.push({
+        $sort: { score: { $meta: "textScore" } },
+      });
+    } else if (sortOrder) {
       let sortField = sortOrder;
       let sortDirection = 1;
 
@@ -171,10 +165,10 @@ router.get("/", async (req, res) => {
       }
     }
 
-    // Add pagination after all other operations (except sorting)
+    // Add pagination
     pipeline.push({ $skip: (pageNum - 1) * limitNum }, { $limit: limitNum });
 
-    // Execute the aggregation pipeline
+    // Execute the pipeline
     let songs = await Song.aggregate(pipeline);
 
     // Get total count for pagination
@@ -183,7 +177,6 @@ router.get("/", async (req, res) => {
     const [countResult] = await Song.aggregate(countPipeline);
     const total = countResult ? countResult.total : 0;
 
-    // Send the result back with pagination metadata
     res.send({
       songs,
       pagination: {
