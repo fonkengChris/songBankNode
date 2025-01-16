@@ -96,7 +96,7 @@ router.post("/google-login", async (req, res) => {
     }
 
     // Generate JWT token
-    const authToken = user.generateAuthToken();
+    const authToken = user.generateAccessToken();
     res.send({ token: authToken });
   } catch (error) {
     // Send detailed error information that will show in browser console
