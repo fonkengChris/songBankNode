@@ -24,7 +24,7 @@ const songSchema = new mongoose.Schema({
   },
 
   mediaFiles: [{ type: mongoose.Schema.Types.ObjectId, ref: "SongMediaFile" }],
-  languageOverride: String,
+  textLanguage: String,
 });
 
 songSchema.methods.updateMetacritic = function () {
@@ -49,7 +49,7 @@ function validateSongPost(song) {
     language: Joi.string().required(),
     category: Joi.string().required(),
     mediaFiles: Joi.array().items(Joi.objectId()).min(1),
-    languageOverride: Joi.string(),
+    textLanguage: Joi.string(),
   });
 
   return schema.validate(song);
