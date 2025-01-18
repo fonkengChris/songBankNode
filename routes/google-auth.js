@@ -8,6 +8,7 @@ const {
   GOOGLE_CLIENT_SECRET,
   GOOGLE_CALLBACK_URL,
 } = require("../config/google-auth");
+const { sendWelcomeEmail } = require("../utils/email-service");
 
 // Create OAuth2Client after importing GOOGLE_CLIENT_ID
 const client = new OAuth2Client(GOOGLE_CLIENT_ID);
@@ -117,7 +118,6 @@ router.post("/google-register", async (req, res) => {
   try {
     const { token } = req.body;
 
-    // Verify the token
     const ticket = await client.verifyIdToken({
       idToken: token,
       audience: GOOGLE_CLIENT_ID,
@@ -125,25 +125,30 @@ router.post("/google-register", async (req, res) => {
 
     const payload = ticket.getPayload();
 
-    // Check if user exists
     let user = await User.findOne({ email: payload.email });
 
     if (user) {
       return res.status(409).json({ message: "User already exists" });
     }
 
-    // Create new user
     user = new User({
       name: payload.name,
       email: payload.email,
       picture: payload.picture,
       googleId: payload.sub,
-      password: Math.random().toString(36).slice(-8), // Random password for Google users
+      password: Math.random().toString(36).slice(-8),
     });
 
     await user.save();
 
-    // Generate JWT token
+    // Send welcome email
+    try {
+      await sendWelcomeEmail(user.email, user.name);
+    } catch (emailError) {
+      console.error("Failed to send welcome email:", emailError);
+      // Continue with registration even if email fails
+    }
+
     const accessToken = user.generateAccessToken();
 
     res.json({ accessToken });

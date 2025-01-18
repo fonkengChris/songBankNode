@@ -40,6 +40,41 @@ async function sendPasswordResetEmail(email, token) {
   }
 }
 
+async function sendWelcomeEmail(email, name) {
+  try {
+    const siteUrl = process.env.FRONTEND_URL;
+
+    const mailOptions = {
+      from: process.env.EMAIL_USER,
+      to: email,
+      subject: "Welcome to Sheet Music Library!",
+      html: `
+        <h2>Welcome to Sheet Music Library, ${name}!</h2>
+        <p>Thank you for joining our community. We're excited to have you on board!</p>
+        <p>You can now:</p>
+        <ul>
+          <li>Browse our collection of sheet music</li>
+          <li>Create and manage your own library</li>
+          <li>Share and collaborate with other musicians</li>
+        </ul>
+        <p>Visit our site at: <a href="${siteUrl}">${siteUrl}</a></p>
+        <p>If you have any questions, feel free to reach out to our support team.</p>
+        <br>
+        <p>Best regards,</p>
+        <p>The Sheet Music Library Team</p>
+      `,
+    };
+
+    const info = await transporter.sendMail(mailOptions);
+    console.log("Welcome email sent successfully:", info);
+    return info;
+  } catch (error) {
+    console.error("Failed to send welcome email:", error);
+    throw error;
+  }
+}
+
 module.exports = {
   sendPasswordResetEmail,
+  sendWelcomeEmail,
 };

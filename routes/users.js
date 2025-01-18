@@ -7,6 +7,7 @@ const { User, validatePost, validatePut, ROLES } = require("../modules/user");
 const mongoose = require("mongoose");
 const express = require("express");
 const router = express.Router();
+const { sendWelcomeEmail } = require("../utils/email-service");
 
 router.get("/", async (req, res) => {
   const users = await User.find().sort("name");
@@ -31,6 +32,14 @@ router.post("/", async (req, res) => {
   const salt = await bcrypt.genSalt(10);
   user.password = await bcrypt.hash(user.password, salt);
   await user.save();
+
+  // Send welcome email
+  try {
+    await sendWelcomeEmail(user.email, user.name);
+  } catch (emailError) {
+    console.error("Failed to send welcome email:", emailError);
+    // Continue with registration even if email fails
+  }
 
   const token = user.generateAccessToken();
 
