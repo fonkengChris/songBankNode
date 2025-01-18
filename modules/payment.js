@@ -1,0 +1,65 @@
+const mongoose = require("mongoose");
+const Joi = require("joi");
+
+const paymentSchema = new mongoose.Schema(
+  {
+    userId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      required: true,
+    },
+    orderId: {
+      type: String,
+      required: true,
+      unique: true,
+    },
+    amount: {
+      type: Number,
+      required: true,
+    },
+    description: {
+      type: String,
+      required: true,
+    },
+    status: {
+      type: String,
+      required: true,
+      enum: [
+        "COMPLETED",
+        "SAVED",
+        "APPROVED",
+        "VOIDED",
+        "PAYER_ACTION_REQUIRED",
+      ],
+    },
+  },
+  {
+    timestamps: true,
+  }
+);
+
+paymentSchema.methods.toResponse = function () {
+  return {
+    orderId: this.orderId,
+    status: this.status,
+    amount: this.amount,
+    description: this.description,
+    createdAt: this.createdAt,
+  };
+};
+
+const Payment = mongoose.model("Payment", paymentSchema);
+
+function validatePayment(payment) {
+  const schema = Joi.object({
+    orderId: Joi.string().required(),
+    amount: Joi.number().required().min(0),
+    description: Joi.string().required(),
+    status: Joi.string().required(),
+  });
+
+  return schema.validate(payment);
+}
+
+exports.Payment = Payment;
+exports.validate = validatePayment;
