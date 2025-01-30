@@ -32,6 +32,14 @@ const paymentSchema = new mongoose.Schema(
         "PAYER_ACTION_REQUIRED",
       ],
     },
+    paymentDetails: {
+      mediaFileId: String,
+      purchaseType: {
+        type: String,
+        enum: ["SONG", "SUBSCRIPTION"],
+        default: "SONG",
+      },
+    },
   },
   {
     timestamps: true,
@@ -45,6 +53,8 @@ paymentSchema.methods.toResponse = function () {
     amount: this.amount,
     description: this.description,
     createdAt: this.createdAt,
+    mediaFileId: this.paymentDetails?.mediaFileId,
+    purchaseType: this.paymentDetails?.purchaseType,
   };
 };
 
@@ -56,6 +66,10 @@ function validatePayment(payment) {
     amount: Joi.number().required().min(0),
     description: Joi.string().required(),
     status: Joi.string().required(),
+    paymentDetails: Joi.object({
+      mediaFileId: Joi.string(),
+      purchaseType: Joi.string().valid("SONG", "SUBSCRIPTION"),
+    }),
   });
 
   return schema.validate(payment);

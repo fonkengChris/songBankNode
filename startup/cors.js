@@ -1,36 +1,55 @@
 const cors = require("cors");
 
 module.exports = function (app) {
+  // console.log("Configuring CORS...");
+
+  const frontendUrl = process.env.FRONTEND_URL || "http://localhost:5173";
+  // console.log("Frontend URL:", frontendUrl);
+
   const corsOptions = {
-    origin: [
-      "http://127.0.0.1:5173",
-      "http://localhost:5173",
-      "https://sheet-music-library-vite-7ffed1c383be.herokuapp.com",
-    ],
-    methods: ["GET", "HEAD", "PUT", "PATCH", "POST", "DELETE", "OPTIONS"],
+    origin: frontendUrl,
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allowedHeaders: [
       "Content-Type",
       "x-auth-token",
+      "Authorization",
       "Accept",
-      "Accept-Encoding",
-      "Accept-Language",
-      "Connection",
-      "Cookie",
-      "Host",
       "Origin",
-      "Referer",
-      "Sec-Fetch-Dest",
-      "Sec-Fetch-Mode",
-      "Sec-Fetch-Site",
-      "User-Agent",
-      "sec-ch-ua",
-      "sec-ch-ua-mobile",
-      "sec-ch-ua-platform",
     ],
-    credentials: true,
     optionsSuccessStatus: 200,
-    maxAge: 3600,
   };
 
+  // console.log("CORS Options:", JSON.stringify(corsOptions, null, 2));
+
+  // Add a middleware to log CORS headers for each request
+  app.use((req, res, next) => {
+    console.log("\nIncoming request:");
+    console.log("Origin:", req.headers.origin);
+    console.log("Method:", req.method);
+
+    // Log response headers after CORS middleware processes them
+    // res.on("finish", () => {
+    //   console.log("\nResponse headers:");
+    //   console.log(
+    //     "Access-Control-Allow-Origin:",
+    //     res.getHeader("Access-Control-Allow-Origin")
+    //   );
+    //   console.log(
+    //     "Access-Control-Allow-Methods:",
+    //     res.getHeader("Access-Control-Allow-Methods")
+    //   );
+    //   console.log(
+    //     "Access-Control-Allow-Headers:",
+    //     res.getHeader("Access-Control-Allow-Headers")
+    //   );
+    // });
+
+    next();
+  });
+
   app.use(cors(corsOptions));
+  // console.log(
+  //   "CORS middleware installed with options:",
+  //   JSON.stringify(corsOptions, null, 2)
+  // );
 };

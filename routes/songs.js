@@ -219,6 +219,7 @@ router.post("/", [auth, admin], async (req, res) => {
       language: languageId,
       category: categoryId,
       mediaFiles: req.body.mediaFiles,
+      price: req.body.price,
     });
 
     song = await song.save();
@@ -264,7 +265,8 @@ router.put("/:id", [auth, admin, validateObjectId], async (req, res) => {
         lyrics: req.body.lyrics,
         language: req.body.language,
         category: req.body.category,
-        mediaFiles: mediaFileIds, // Use the new mediaFile IDs
+        mediaFiles: mediaFileIds,
+        price: req.body.price,
       },
       { new: true }
     );

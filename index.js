@@ -3,7 +3,8 @@ const winston = require("winston");
 const express = require("express");
 const app = express();
 
-// CORS setup should be one of the first middleware
+// Move prod before CORS if it includes security middleware
+require("./startup/prod")(app);
 require("./startup/cors")(app);
 
 // Routes and other middleware
@@ -12,7 +13,6 @@ require("./startup/logging")();
 require("./startup/db-connection")();
 require("./startup/config")();
 require("./startup/validation")();
-require("./startup/prod")(app);
 
 // Error handling middleware
 app.use((err, req, res, next) => {

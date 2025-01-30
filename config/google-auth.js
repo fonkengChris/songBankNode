@@ -11,6 +11,9 @@ requiredVars.forEach((varName) => {
   }
 });
 
+// Add console.log to verify the client ID being used
+console.log("Using Google Client ID:", process.env.GOOGLE_CLIENT_ID);
+
 // Set the correct callback URL based on environment
 const callbackURL = isProd
   ? "https://sheet-music-library-ad225c202768.herokuapp.com/api/auth/google/callback"

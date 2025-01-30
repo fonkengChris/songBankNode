@@ -25,6 +25,7 @@ const songSchema = new mongoose.Schema({
 
   mediaFiles: [{ type: mongoose.Schema.Types.ObjectId, ref: "SongMediaFile" }],
   textLanguage: String,
+  price: { type: Number, default: 0, min: 0 },
 });
 
 songSchema.methods.updateMetacritic = function () {
@@ -50,6 +51,7 @@ function validateSongPost(song) {
     category: Joi.string().required(),
     mediaFiles: Joi.array().items(Joi.objectId()).min(1),
     textLanguage: Joi.string(),
+    price: Joi.number().min(0),
   });
 
   return schema.validate(song);
@@ -69,6 +71,7 @@ function validateSongPut(song) {
       __v: Joi.number(),
     }).required(),
     mediaFiles: Joi.array().items(Joi.objectId()).min(1),
+    price: Joi.number().min(0),
   });
 
   return schema.validate(song);

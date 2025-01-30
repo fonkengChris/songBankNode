@@ -14,4 +14,14 @@ const environment =
 
 const client = new paypal.core.PayPalHttpClient(environment);
 
-module.exports = { client };
+// Webhook event types we're interested in
+const WEBHOOK_EVENTS = [
+  "PAYMENT.CAPTURE.COMPLETED",
+  "PAYMENT.CAPTURE.DENIED",
+  "PAYMENT.CAPTURE.PENDING",
+];
+
+module.exports = {
+  client,
+  WEBHOOK_EVENTS,
+};

@@ -3,90 +3,120 @@ const paypal = require("@paypal/checkout-server-sdk");
 const auth = require("../middleware/auth");
 const { client } = require("../config/paypal");
 const router = express.Router();
-const Payment = require("../modules/payment");
+const { Payment } = require("../modules/payment");
 
-// Record payment in database
-router.post("/", auth, async (req, res) => {
+// Create order endpoint (optional, since frontend handles creation)
+router.post("/create-order", auth, async (req, res) => {
   try {
-    const { orderId, status, amount, description } = req.body;
-    const userId = req.user._id;
+    const { amount, description } = req.body;
 
-    // Verify the payment with PayPal
-    const request = new paypal.orders.OrdersGetRequest(orderId);
+    const request = new paypal.orders.OrdersCreateRequest();
+    request.prefer("return=representation");
+    request.requestBody({
+      intent: "CAPTURE",
+      purchase_units: [
+        {
+          amount: {
+            currency_code: "USD",
+            value: amount.toString(),
+          },
+          description,
+        },
+      ],
+    });
+
     const order = await client.execute(request);
+    res.json({ orderId: order.result.id });
+  } catch (error) {
+    console.error("Create order error:", error);
+    res.status(500).json({
+      error: "Failed to create order",
+      details: error.message,
+    });
+  }
+});
 
-    // Validate payment amount and status
-    const paypalAmount = order.result.purchase_units[0].amount.value;
-    if (paypalAmount !== amount.toString() || order.result.status !== status) {
-      return res.status(400).json({
-        error: "Payment verification failed",
-        details: "Payment amount or status mismatch",
+// Webhook handler for PayPal payment notifications
+router.post("/webhook", async (req, res) => {
+  try {
+    const { event_type, resource } = req.body;
+
+    // Verify webhook signature (recommended in production)
+    // const isValid = verifyWebhookSignature(req);
+    // if (!isValid) return res.status(400).send('Invalid webhook signature');
+
+    if (event_type === "PAYMENT.CAPTURE.COMPLETED") {
+      const order = resource;
+
+      // Create or update payment record
+      const payment = new Payment({
+        orderId: order.id,
+        status: "COMPLETED",
+        amount: parseFloat(order.purchase_units[0].amount.value),
+        description: order.purchase_units[0].description,
+        // You might want to extract userId from custom_id or other metadata
       });
+
+      await payment.save();
     }
 
-    const payment = new Payment({
-      userId,
-      orderId,
-      amount,
-      description,
-      status,
-    });
-
-    await payment.save();
-
-    // Return response in the format expected by the frontend
-    res.status(200).json(payment.toResponse());
+    res.status(200).send("Webhook received");
   } catch (error) {
-    console.error("Payment processing error:", error);
-    res.status(500).json({
-      error: "Failed to process payment",
-      details: error.message,
-    });
+    console.error("Webhook error:", error);
+    res.status(500).json({ error: "Webhook processing failed" });
   }
 });
 
-// Get user's payment history
-router.get("/history", auth, async (req, res) => {
+// Verify purchase status
+router.get("/verify/:orderId", auth, async (req, res) => {
   try {
-    const payments = await Payment.find({ userId: req.user._id }).sort({
-      createdAt: -1,
-    });
+    const { orderId } = req.params;
 
-    res.json(payments.map((payment) => payment.toResponse()));
-  } catch (error) {
-    console.error("Failed to fetch payment history:", error);
-    res.status(500).json({
-      error: "Failed to fetch payment history",
-      details: error.message,
-    });
-  }
-});
-
-// Get payment details
-router.get("/:orderId", auth, async (req, res) => {
-  try {
+    // Check local database first
     const payment = await Payment.findOne({
-      orderId: req.params.orderId,
+      orderId,
       userId: req.user._id,
     });
 
-    if (!payment) {
-      return res.status(404).json({ error: "Payment not found" });
+    if (payment && payment.status === "COMPLETED") {
+      return res.json({ status: "COMPLETED" });
     }
 
-    const request = new paypal.orders.OrdersGetRequest(req.params.orderId);
+    // If not found or not completed, verify with PayPal
+    const request = new paypal.orders.OrdersGetRequest(orderId);
     const order = await client.execute(request);
 
-    res.json({
-      ...payment.toResponse(),
-      paypalDetails: order.result,
-    });
+    if (order.result.status === "COMPLETED" && !payment) {
+      // Create payment record if it doesn't exist
+      const newPayment = new Payment({
+        userId: req.user._id,
+        orderId,
+        status: "COMPLETED",
+        amount: parseFloat(order.result.purchase_units[0].amount.value),
+        description: order.result.purchase_units[0].description,
+      });
+      await newPayment.save();
+    }
+
+    res.json({ status: order.result.status });
   } catch (error) {
-    console.error("Payment verification error:", error);
-    res.status(500).json({
-      error: "Failed to verify payment",
-      details: error.message,
-    });
+    console.error("Verification error:", error);
+    res.status(500).json({ error: "Failed to verify payment" });
+  }
+});
+
+// Get user's purchases
+router.get("/purchases", auth, async (req, res) => {
+  try {
+    const purchases = await Payment.find({
+      userId: req.user._id,
+      status: "COMPLETED",
+    }).sort({ createdAt: -1 });
+
+    res.json(purchases.map((p) => p.toResponse()));
+  } catch (error) {
+    console.error("Failed to fetch purchases:", error);
+    res.status(500).json({ error: "Failed to fetch purchases" });
   }
 });
 
