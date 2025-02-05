@@ -25,6 +25,7 @@ const paymentSchema = new mongoose.Schema(
       type: String,
       required: true,
       enum: [
+        "PENDING",
         "COMPLETED",
         "SAVED",
         "APPROVED",
@@ -39,6 +40,16 @@ const paymentSchema = new mongoose.Schema(
         enum: ["SONG", "SUBSCRIPTION"],
         default: "SONG",
       },
+      provider: {
+        type: String,
+        enum: ["PAYPAL", "MTN_MOMO"],
+        required: true,
+      },
+      originalAmount: Number,
+      originalCurrency: String,
+      convertedAmount: Number,
+      convertedCurrency: String,
+      exchangeRate: Number,
     },
   },
   {
