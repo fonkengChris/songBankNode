@@ -98,8 +98,35 @@ async function sendContactEmail(senderEmail, senderName, message) {
   }
 }
 
+async function sendAutoReplyEmail(email, name) {
+  try {
+    const mailOptions = {
+      from: process.env.EMAIL_USER,
+      to: email,
+      subject: "We've Received Your Message - Sheet Music Library",
+      html: `
+        <h2>Hello ${name},</h2>
+        <p>Thank you for contacting Sheet Music Library. This email confirms that we have received your message.</p>
+        <p>Our team will review your inquiry and respond within 2-5 business days.</p>
+        <p>Please note that this is an automated response. If you need immediate assistance, please check our contact page on our website.</p>
+        <br>
+        <p>Best regards,</p>
+        <p>The Sheet Music Library Team</p>
+      `,
+    };
+
+    const info = await transporter.sendMail(mailOptions);
+    console.log("Auto-reply email sent successfully:", info);
+    return info;
+  } catch (error) {
+    console.error("Failed to send auto-reply email:", error);
+    throw error;
+  }
+}
+
 module.exports = {
   sendPasswordResetEmail,
   sendWelcomeEmail,
   sendContactEmail,
+  sendAutoReplyEmail,
 };

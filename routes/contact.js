@@ -1,6 +1,9 @@
 const express = require("express");
 const router = express.Router();
-const { sendContactEmail } = require("../utils/email-service");
+const {
+  sendContactEmail,
+  sendAutoReplyEmail,
+} = require("../utils/email-service");
 
 router.post("/", async (req, res) => {
   try {
@@ -13,7 +16,11 @@ router.post("/", async (req, res) => {
       });
     }
 
+    // Send message to admin
     await sendContactEmail(email, name, message);
+
+    // Send auto-reply to sender
+    await sendAutoReplyEmail(email, name);
 
     res.status(200).json({
       message: "Contact message sent successfully",
