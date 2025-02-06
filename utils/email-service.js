@@ -74,7 +74,32 @@ async function sendWelcomeEmail(email, name) {
   }
 }
 
+async function sendContactEmail(senderEmail, senderName, message) {
+  try {
+    const mailOptions = {
+      from: process.env.EMAIL_USER,
+      to: "librarysheetmusic@gmail.com",
+      subject: `New Contact Form Message from ${senderName}`,
+      html: `
+        <h2>New Contact Form Submission</h2>
+        <p><strong>From:</strong> ${senderName} (${senderEmail})</p>
+        <p><strong>Message:</strong></p>
+        <p>${message}</p>
+      `,
+      replyTo: senderEmail,
+    };
+
+    const info = await transporter.sendMail(mailOptions);
+    console.log("Contact email sent successfully:", info);
+    return info;
+  } catch (error) {
+    console.error("Failed to send contact email:", error);
+    throw error;
+  }
+}
+
 module.exports = {
   sendPasswordResetEmail,
   sendWelcomeEmail,
+  sendContactEmail,
 };

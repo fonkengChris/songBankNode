@@ -220,6 +220,7 @@ router.post("/", [auth, admin], async (req, res) => {
       category: categoryId,
       mediaFiles: req.body.mediaFiles,
       price: req.body.price,
+      youtubeUrl: req.body.youtubeUrl,
     });
 
     song = await song.save();
@@ -267,6 +268,7 @@ router.put("/:id", [auth, admin, validateObjectId], async (req, res) => {
         category: req.body.category,
         mediaFiles: mediaFileIds,
         price: req.body.price,
+        youtubeUrl: req.body.youtubeUrl,
       },
       { new: true }
     );

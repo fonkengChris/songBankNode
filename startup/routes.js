@@ -16,6 +16,7 @@ const googleAuth = require("../routes/google-auth");
 const passwordReset = require("../routes/password-reset");
 const payments = require("../routes/payments");
 const momo = require("../routes/momo");
+const contact = require("../routes/contact");
 
 module.exports = function (app) {
   // Body parsing middleware
@@ -45,6 +46,7 @@ module.exports = function (app) {
   app.use("/api/auth/password-reset", passwordReset);
   app.use("/api/payments", payments);
   app.use("/api/momo", momo);
+  app.use("/api/contact", contact);
 
   // Static files
   app.use("/media", express.static(path.join(__dirname, "../media")));
