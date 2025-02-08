@@ -78,15 +78,19 @@ function convertAmount(amount, environment) {
 // Initialize payment
 router.post("/payment", auth, async (req, res) => {
   try {
-    const { amount, description } = req.body;
-    const referenceId = uuidv4();
+    const { amount, description, phoneNumber } = req.body;
 
-    console.log("Starting payment process:", {
-      environment: MOMO_CONFIG.TARGET_ENVIRONMENT,
-      amount,
-      description,
-      referenceId,
-    });
+    if (!phoneNumber) {
+      return res.status(400).json({
+        error: "Phone number is required",
+        details: "Please provide the customer's phone number",
+      });
+    }
+
+    // Format phone number (remove leading + or 0 and ensure correct format)
+    const formattedPhone = phoneNumber.replace(/^\+|^0+/, "");
+
+    const referenceId = uuidv4();
 
     // Convert USD based on environment
     const { convertedAmount, targetCurrency, exchangeRate } = convertAmount(
@@ -94,11 +98,11 @@ router.post("/payment", auth, async (req, res) => {
       MOMO_CONFIG.TARGET_ENVIRONMENT
     );
 
-    console.log("Currency conversion:", {
-      originalAmount: amount,
-      convertedAmount,
-      targetCurrency,
-      exchangeRate,
+    console.log("Payment request initiated:", {
+      amount: convertedAmount,
+      currency: targetCurrency,
+      phone: formattedPhone,
+      description,
     });
 
     // Get access token
@@ -111,16 +115,11 @@ router.post("/payment", auth, async (req, res) => {
       externalId: referenceId,
       payer: {
         partyIdType: "MSISDN",
-        partyId: "123456789", // This should come from the client
+        partyId: formattedPhone,
       },
       payerMessage: description,
       payeeNote: description,
     };
-
-    console.log("Payment request:", {
-      ...paymentRequest,
-      payer: "(hidden for security)",
-    });
 
     // Request payment from MTN MoMo
     const response = await axios.post(
@@ -151,6 +150,7 @@ router.post("/payment", auth, async (req, res) => {
         convertedAmount,
         convertedCurrency: targetCurrency,
         exchangeRate,
+        phoneNumber: formattedPhone,
       },
     });
 
@@ -160,54 +160,17 @@ router.post("/payment", auth, async (req, res) => {
       status: "PENDING",
       referenceId,
       message:
-        "Payment request initiated. Please confirm the payment on your mobile device.",
+        "Payment request initiated. Please confirm on your mobile phone.",
       originalAmount: amount,
       convertedAmount,
       currency: targetCurrency,
-      statusCheckUrl: `/api/momo/status/${referenceId}`, // URL for status checking
+      phoneNumber: formattedPhone,
     });
-
-    // Optional: Start polling for status updates
-    let attempts = 0;
-    const maxAttempts = 10;
-    const pollInterval = setInterval(async () => {
-      attempts++;
-      const status = await pollPaymentStatus(referenceId);
-
-      if (status === "SUCCESSFUL") {
-        await Payment.findOneAndUpdate(
-          { orderId: referenceId },
-          { status: "COMPLETED" }
-        );
-        clearInterval(pollInterval);
-      } else if (status === "FAILED" || status === "REJECTED") {
-        await Payment.findOneAndUpdate(
-          { orderId: referenceId },
-          { status: "VOIDED" }
-        );
-        clearInterval(pollInterval);
-      } else if (attempts >= maxAttempts) {
-        clearInterval(pollInterval);
-      }
-    }, 5000); // Poll every 5 seconds
   } catch (error) {
-    console.error("MoMo payment error:", {
-      status: error.response?.status,
-      data: error.response?.data,
-      message: error.message,
-      config: {
-        url: error.config?.url,
-        headers: {
-          ...error.config?.headers,
-          Authorization: "(hidden for security)",
-        },
-      },
-    });
-
+    console.error("MoMo payment error:", error);
     res.status(500).json({
       error: "Failed to initiate payment",
       details: error.response?.data?.message || error.message,
-      code: error.response?.status,
     });
   }
 });
