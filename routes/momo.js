@@ -9,47 +9,50 @@ const { v4: uuidv4 } = require("uuid");
 // Helper function to get access token
 async function getMoMoToken() {
   try {
-    // Create Basic auth token from USER_ID and API_KEY
-    const auth = Buffer.from(
-      `${MOMO_CONFIG.USER_ID}:${MOMO_CONFIG.API_KEY}`
-    ).toString("base64");
-
-    console.log("MoMo Config:", {
+    console.log("Getting MoMo token with config:", {
       environment: MOMO_CONFIG.TARGET_ENVIRONMENT,
       userId: MOMO_CONFIG.USER_ID,
-      // Don't log sensitive data in production
-      // apiKey: MOMO_CONFIG.API_KEY,
-      // primaryKey: MOMO_CONFIG.PRIMARY_KEY
     });
 
-    const response = await axios.post(
-      API_ENDPOINTS.GET_TOKEN,
-      {},
-      {
-        headers: {
-          Authorization: `Basic ${auth}`,
-          "Ocp-Apim-Subscription-Key": MOMO_CONFIG.PRIMARY_KEY,
-          "X-Target-Environment": MOMO_CONFIG.TARGET_ENVIRONMENT,
-        },
-      }
-    );
+    const response = await axios({
+      method: "post",
+      url: API_ENDPOINTS.GET_TOKEN,
+      headers: {
+        "Ocp-Apim-Subscription-Key": MOMO_CONFIG.PRIMARY_KEY,
+        "X-Target-Environment": MOMO_CONFIG.TARGET_ENVIRONMENT,
+        "Content-Type": "application/json",
+        "X-Reference-Id": MOMO_CONFIG.USER_ID,
+      },
+      auth: {
+        username: MOMO_CONFIG.USER_ID,
+        password: MOMO_CONFIG.API_KEY,
+      },
+    });
 
-    console.log("Token response status:", response.status);
+    if (!response.data.access_token) {
+      console.error("No access token in response:", response.data);
+      throw new Error("No access token received");
+    }
+
+    console.log("Successfully obtained access token");
     return response.data.access_token;
   } catch (error) {
     console.error("Error getting MoMo token:", {
       status: error.response?.status,
+      statusText: error.response?.statusText,
       data: error.response?.data,
-      message: error.message,
-      config: {
-        url: error.config?.url,
-        headers: {
-          ...error.config?.headers,
-          Authorization: "(hidden for security)",
-        },
+      headers: error.response?.headers,
+      url: error.config?.url,
+      requestHeaders: {
+        ...error.config?.headers,
+        Authorization: "(hidden for security)",
       },
     });
-    throw new Error(`Failed to get access token: ${error.message}`);
+    throw new Error(
+      `Failed to get access token: ${
+        error.response?.data?.message || error.message
+      }`
+    );
   }
 }
 
