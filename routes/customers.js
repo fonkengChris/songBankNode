@@ -19,7 +19,6 @@ router.post("/", async (req, res) => {
       user: req.body.user,
       phone: req.body.phone,
       country: req.body.country,
-      birth_date: req.body.birth_date,
     });
     await customer.save();
     res.send(customer);
@@ -37,7 +36,6 @@ router.put("/:id", auth, async (req, res) => {
     {
       phone: req.body.phone,
       country: req.body.country,
-      birth_date: req.body.birth_date,
     },
     { new: true }
   );
