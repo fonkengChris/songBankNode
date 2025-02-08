@@ -14,19 +14,27 @@ async function getMoMoToken() {
       `${MOMO_CONFIG.USER_ID}:${MOMO_CONFIG.API_KEY}`
     ).toString("base64");
 
+    console.log("MoMo Config:", {
+      environment: MOMO_CONFIG.TARGET_ENVIRONMENT,
+      userId: MOMO_CONFIG.USER_ID,
+      // Don't log sensitive data in production
+      // apiKey: MOMO_CONFIG.API_KEY,
+      // primaryKey: MOMO_CONFIG.PRIMARY_KEY
+    });
+
     const response = await axios.post(
       API_ENDPOINTS.GET_TOKEN,
       {},
       {
         headers: {
           Authorization: `Basic ${auth}`,
-          "Ocp-Apim-Subscription-Key": MOMO_CONFIG.PRIMARY_KEY, // This is the Subscription Key
+          "Ocp-Apim-Subscription-Key": MOMO_CONFIG.PRIMARY_KEY,
           "X-Target-Environment": MOMO_CONFIG.TARGET_ENVIRONMENT,
         },
       }
     );
 
-    console.log("Token response:", response.data);
+    console.log("Token response status:", response.status);
     return response.data.access_token;
   } catch (error) {
     console.error("Error getting MoMo token:", {
@@ -41,7 +49,7 @@ async function getMoMoToken() {
         },
       },
     });
-    throw error;
+    throw new Error(`Failed to get access token: ${error.message}`);
   }
 }
 
@@ -70,11 +78,25 @@ router.post("/payment", auth, async (req, res) => {
     const { amount, description } = req.body;
     const referenceId = uuidv4();
 
+    console.log("Starting payment process:", {
+      environment: MOMO_CONFIG.TARGET_ENVIRONMENT,
+      amount,
+      description,
+      referenceId,
+    });
+
     // Convert USD based on environment
     const { convertedAmount, targetCurrency, exchangeRate } = convertAmount(
       amount,
       MOMO_CONFIG.TARGET_ENVIRONMENT
     );
+
+    console.log("Currency conversion:", {
+      originalAmount: amount,
+      convertedAmount,
+      targetCurrency,
+      exchangeRate,
+    });
 
     // Get access token
     const accessToken = await getMoMoToken();
@@ -86,11 +108,16 @@ router.post("/payment", auth, async (req, res) => {
       externalId: referenceId,
       payer: {
         partyIdType: "MSISDN",
-        partyId: "46733123453", // This should come from the client
+        partyId: "123456789", // This should come from the client
       },
       payerMessage: description,
       payeeNote: description,
     };
+
+    console.log("Payment request:", {
+      ...paymentRequest,
+      payer: "(hidden for security)",
+    });
 
     // Request payment from MTN MoMo
     const response = await axios.post(
@@ -161,10 +188,23 @@ router.post("/payment", auth, async (req, res) => {
       }
     }, 5000); // Poll every 5 seconds
   } catch (error) {
-    console.error("MoMo payment error:", error);
+    console.error("MoMo payment error:", {
+      status: error.response?.status,
+      data: error.response?.data,
+      message: error.message,
+      config: {
+        url: error.config?.url,
+        headers: {
+          ...error.config?.headers,
+          Authorization: "(hidden for security)",
+        },
+      },
+    });
+
     res.status(500).json({
       error: "Failed to initiate payment",
-      details: error.message,
+      details: error.response?.data?.message || error.message,
+      code: error.response?.status,
     });
   }
 });

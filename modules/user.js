@@ -24,8 +24,8 @@ const userSchema = new mongoose.Schema({
   name: {
     type: String,
     required: true,
-    minlength: 5,
-    maxlength: 50,
+    minlength: 3,
+    maxlength: 75,
   },
   email: {
     type: String,
@@ -81,7 +81,7 @@ const User = mongoose.model("User", userSchema);
 
 function validateUserPost(user) {
   const schema = Joi.object({
-    name: Joi.string().min(5).max(255).required(),
+    name: Joi.string().min(3).max(75).required(),
     email: Joi.string().min(5).max(255).required().email(),
     password: passwordComplexity(complexityOptions).required(),
   });
@@ -91,7 +91,7 @@ function validateUserPost(user) {
 
 function validateUserPut(user) {
   const schema = Joi.object({
-    name: Joi.string().min(5).max(255).required(),
+    name: Joi.string().min(3).max(75).required(),
     email: Joi.string().min(5).max(255).required().email(),
     role: Joi.string().valid(...Object.values(ROLES)),
   });
