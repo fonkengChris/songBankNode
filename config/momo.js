@@ -4,17 +4,15 @@ const MOMO_CONFIG = {
   API_KEY: process.env.MOMO_API_KEY,
   USER_ID: process.env.MOMO_USER_ID,
   PRIMARY_KEY: process.env.MOMO_PRIMARY_KEY,
-  ENVIRONMENT: process.env.NODE_ENV === "production" ? "live" : "sandbox",
-  COLLECTION_SUBSCRIPTION_KEY: process.env.MOMO_COLLECTION_SUBSCRIPTION_KEY,
-  TARGET_ENVIRONMENT:
-    process.env.NODE_ENV === "production" ? "live" : "sandbox",
+  // TODO: Change this to "mtncameroon" when going live
+  // Currently using "sandbox" for testing in all environments
+  TARGET_ENVIRONMENT: "sandbox",
 };
 
-// API endpoints based on environment
-const BASE_URL =
-  MOMO_CONFIG.ENVIRONMENT === "live"
-    ? "https://proxy.momoapi.mtn.com"
-    : "https://sandbox.momodeveloper.mtn.com";
+// TODO: Update BASE_URL when going live
+// Production URL should be: https://proxy.momoapi.mtn.cm
+// Currently using sandbox URL for testing
+const BASE_URL = "https://sandbox.momodeveloper.mtn.com";
 
 const API_ENDPOINTS = {
   GET_TOKEN: `${BASE_URL}/collection/token/`,
@@ -22,6 +20,13 @@ const API_ENDPOINTS = {
   REQUEST_TO_PAY_STATUS: (referenceId) =>
     `${BASE_URL}/collection/v1_0/requesttopay/${referenceId}`,
 };
+
+// TODO: Before going live:
+// 1. Change TARGET_ENVIRONMENT to "mtncameroon"
+// 2. Update BASE_URL to production URL
+// 3. Update PRIMARY_KEY to production subscription key
+// 4. Test with real MTN mobile money accounts
+// 5. Update currency conversion to use XAF instead of EUR
 
 module.exports = {
   MOMO_CONFIG,
