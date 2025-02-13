@@ -41,11 +41,12 @@ router.post("/", async (req, res) => {
     // Continue with registration even if email fails
   }
 
-  const token = user.generateAccessToken();
+  const accessToken = user.generateAccessToken();
 
-  res
-    .header("x-auth-token", token)
-    .send(_.pick(user, ["_id", "name", "email", "isAdmin"]));
+  res.send({
+    accessToken,
+    user: _.pick(user, ["_id", "name", "email", "isAdmin"]),
+  });
 });
 
 router.get("/:id", [auth, admin], async (req, res) => {

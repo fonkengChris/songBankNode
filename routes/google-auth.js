@@ -74,41 +74,75 @@ router.get(
 router.post("/google-login", async (req, res) => {
   try {
     const { token } = req.body;
-    const client = new OAuth2Client(GOOGLE_CLIENT_ID);
 
-    // Verify the token with explicit audience check
+    if (!token) {
+      return res.status(400).json({ message: "Token is required" });
+    }
+
+    // Verify the token
     const ticket = await client.verifyIdToken({
       idToken: token,
-      audience: GOOGLE_CLIENT_ID, // Must match exactly with your Client ID
+      audience: GOOGLE_CLIENT_ID,
     });
 
     const payload = ticket.getPayload();
     let user = await User.findOne({ email: payload.email });
 
     if (!user) {
+      // Create new user if they don't exist
       user = new User({
         name: payload.name,
         email: payload.email,
         googleId: payload.sub,
         picture: payload.picture,
+        password: Math.random().toString(36).slice(-8), // Random password for Google users
         isAdmin: false,
       });
       await user.save();
+
+      // Send welcome email for new users
+      try {
+        await sendWelcomeEmail(user.email, user.name);
+      } catch (emailError) {
+        console.error("Failed to send welcome email:", emailError);
+        // Continue with login even if email fails
+      }
     }
 
     // Generate JWT token
-    const authToken = user.generateAccessToken();
-    res.send({ token: authToken });
+    const accessToken = user.generateAccessToken();
+
+    res.send({
+      user: {
+        _id: user._id,
+        name: user.name,
+        email: user.email,
+        isAdmin: user.isAdmin,
+      },
+      accessToken,
+    });
   } catch (error) {
-    // Send detailed error information that will show in browser console
+    console.error("Google login error:", error);
+
+    // More specific error handling
+    if (error.message.includes("Token used too late")) {
+      return res
+        .status(401)
+        .json({ message: "Token expired. Please try logging in again." });
+    }
+
+    if (error.message.includes("Invalid token")) {
+      return res
+        .status(401)
+        .json({ message: "Invalid token. Please try logging in again." });
+    }
+
     res.status(401).json({
-      message: "Invalid token",
-      details: error.message,
-      clientId: GOOGLE_CLIENT_ID, // This will help verify the client ID being used
-      error: {
+      message: "Authentication failed",
+      error: error.message,
+      details: {
         name: error.name,
         message: error.message,
-        stack: error.stack,
       },
     });
   }
@@ -151,7 +185,15 @@ router.post("/google-register", async (req, res) => {
 
     const accessToken = user.generateAccessToken();
 
-    res.json({ accessToken });
+    res.send({
+      user: {
+        _id: user._id,
+        name: user.name,
+        email: user.email,
+        isAdmin: user.isAdmin,
+      },
+      accessToken,
+    });
   } catch (error) {
     console.error("Google registration error:", error);
     res.status(401).json({ message: "Invalid token" });
