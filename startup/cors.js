@@ -3,7 +3,10 @@ const cors = require("cors");
 module.exports = function (app) {
   // console.log("Configuring CORS...");
 
-  const frontendUrl = process.env.FRONTEND_URL || "http://localhost:5173";
+  const frontendUrl =
+    process.env.FRONTEND_URL ||
+    "http://localhost:5173" ||
+    "http://127.0.0.1:5173";
   // console.log("Frontend URL:", frontendUrl);
 
   // Enable debug logging for development
@@ -11,7 +14,7 @@ module.exports = function (app) {
 
   const corsOptions = {
     origin: frontendUrl,
-    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    methods: "GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS",
     allowedHeaders: [
       "Content-Type",
       "Authorization",
@@ -27,8 +30,9 @@ module.exports = function (app) {
       "X-Reference-Id",
       "X-Target-Environment",
       "Ocp-Apim-Subscription-Key",
+      "x-auth-token",
     ],
-    credentials: true,
+    // credentials: true,
     optionsSuccessStatus: 200,
     preflightContinue: false,
     maxAge: 86400, // 24 hours
